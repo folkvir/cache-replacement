@@ -5,22 +5,64 @@ const EventEmitter = require('events');
 module.exports = class NodeCache extends AbstractCache {
   constructor(cache, options = {}) {
     super();
+    
     this._cache = new cache(options);
-    this._cache.clear();
-    this._cache.has('toto');
     this._events = new EventEmitter();
-    console.log('Before redefinition Cache:', this._cache.clear, this._cache.has);
-    console.log('Before redefinition This: ', this.clear, this.has);
-    // define _cache as our parent
-    console.log(this.prototype, this._cache.prototype);
+    
+    lmerge(this, this._cache);
+  }
 
-    // console.log('Before setting prototype: ', this.has, this.clear);
-    // Object.setPrototypeOf(this, this._cache);
-    // console.log('After setting prototype Cache:', this._cache.clear, this._cache.has);
-    // console.log('After setting prototype This: ', this.clear, this.has);
-    // // lmerge(this, this._cache);
-    // Object.assign(this.prototype, this._cache.prototype);
-    // // console.log('Merging properties', this._cache.clear,' into this object...');
-    // this.clear();
+  /**
+   * Get a value for a given key
+   * @param  {String} key
+   * @return {Object}
+   */
+  get(key) {
+    return this._cache.get(key);
+  }
+
+  /**
+   * Set a value for a given key
+   * @param  {String} key
+   * @param {Object} value   [description]
+   * @param {Object} options optionnal options
+   */
+  set(key, value, ...options) {
+    return this._cache.set(key, value, ...options)
+  }
+
+  /**
+   * Check if a key is defined in the cache
+   * @param  {String}  key
+   * @return {Boolean}     true or false
+   */
+  has(key) {
+    return this._cache.has(key);
+  }
+
+  /**
+   * Reset the cache to an empty cache
+   * @return {void}
+   */
+  clear() {
+    console.log(this);
+    return this._cache.clear();
+  }
+
+  /**
+   * Delete a given key from the cache
+   * @param  {[type]} key
+   * @return {Boolean}
+   */
+  del(key) {
+    this._cache.del()
+  }
+
+  /**
+   * Get the size of the cache
+   * @return {Number}
+   */
+  size() {
+    return this._cache.size();
   }
 }
