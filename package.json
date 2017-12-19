@@ -1,0 +1,31 @@
+{
+  "name": "cache-replacement",
+  "version": "0.0.0",
+  "description": "Cache Replacement Policies tool",
+  "main": "cache-replacement.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/folkvir/cache-replacement.git"
+  },
+  "keywords": [
+    "cache",
+    "replacement",
+    "policies",
+    "node",
+    "web"
+  ],
+  "author": "Folkvir",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/folkvir/cache-replacement/issues"
+  },
+  "homepage": "https://github.com/folkvir/cache-replacement#readme",
+  "dependencies": {
+    "fifo": "^2.3.0",
+    "lodash.merge": "^4.6.0",
+    "node-cache": "^4.1.1"
+  }
+}
