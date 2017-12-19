@@ -9,6 +9,7 @@ module.exports = class NodeCache extends AbstractCache {
     this._cache = new cache(options);
     this._events = new EventEmitter();
     
+    
     lmerge(this, this._cache);
   }
 
@@ -28,6 +29,7 @@ module.exports = class NodeCache extends AbstractCache {
    * @param {Object} options optionnal options
    */
   set(key, value, ...options) {
+    console.log(this);
     return this._cache.set(key, value, ...options)
   }
 
@@ -55,7 +57,7 @@ module.exports = class NodeCache extends AbstractCache {
    * @return {Boolean}
    */
   del(key) {
-    this._cache.del()
+    return this._cache.del()
   }
 
   /**
