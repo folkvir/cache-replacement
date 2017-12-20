@@ -25,7 +25,6 @@ class CacheReplacementPolicy {
    * Add listeners of any method listed on the object methods in a cache.
    */
   _initPolicy (methods, cache) {
-    console.log('Methods defined: ', methods);
     if(methods.length === 0) throw new Error('Need array of function\'s name for the policy trigger.');
     methods.forEach(method => {
       const saveMethod = cache[method];
@@ -35,7 +34,6 @@ class CacheReplacementPolicy {
         return resSaveMethod;
       }
     })
-    console.log('Initialized...');
   }
 
   /**

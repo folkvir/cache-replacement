@@ -2,7 +2,7 @@ const CacheReplacementPolicy = require('../main.js');
 const lmerge = require('lodash.merge');
 const Cache = require('node-cache');
 const FIFOQueue = require('fifo');
-
+const debug = require('debug')('fifo');
 
 /**
  * This policy act as a FIFO queue, if a new element is added to the cache and the cache is full then the first element added is deleted.
@@ -29,31 +29,31 @@ module.exports = class FifoPolicy {
 
   policySet(cache) {
     cache._events.on('set', (key, value, result) => {
-      console.log('Calling method set with: ', key, value, result, "... Cache Options: ", cache._variables.get('options'));
+      debug('Calling method set with: ', key, value, result, "... Cache Options: ", cache._variables.get('options'));
       if(result && cache.has(key)){
         const max = cache._variables.get('options').max, size = cache._variables.get('fifoqueue').length;
         if(size >= max) {
-          console.log('Deleting the first key because max cache length');
+          debug('Deleting the first key because max cache length');
           // delete the first element in the queue and delete the element in the cache
 
           const oldKey = cache._variables.get('fifoqueue').shift();
 
           if(oldKey !== key) cache.del(oldKey);
         }
-        console.log('Adding the key to the fifo queue');
+        debug('Adding the key to the fifo queue');
         cache._variables.get('fifoqueue').push(key);
-        console.log(cache._variables.get('fifoqueue'));
+        debug(cache._variables.get('fifoqueue'));
       } else {
         // noop, just set the variable in the cache
-        console.log('Simple behavior');
+        debug('Simple behavior');
       }
-      console.log('fifoqueue size: ', cache._variables.get('fifoqueue').length, ' IsInCache: ', cache.has(key))
+      debug('fifoqueue size: ', cache._variables.get('fifoqueue').length, ' IsInCache: ', cache.has(key))
     });
   }
 
   policyDel(cache) {
     cache._events.on('del', (key, result) => {
-      console.log('Calling method del with: ', key, result, "...");
+      debug('Calling method del with: ', key, result, "...");
       if(result && !cache.has(key)) {
         cache._variables.get('fifoqueue').bump(key);
         cache._variables.get('fifoqueue').pop();
@@ -67,7 +67,7 @@ module.exports = class FifoPolicy {
 
   policyClear(cache) {
     cache._events.on('clear', (result) => {
-      console.log('Calling method clear with: ', result, "...");
+      debug('Calling method clear with: ', result, "...");
       cache._variables.get('fifoqueue').clear();
     });
   }
