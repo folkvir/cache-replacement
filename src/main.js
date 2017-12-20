@@ -1,8 +1,7 @@
 const lmerge = require('lodash.merge');
 const EventEmitter = require('events');
-const Cache = require('./default-cache/cache.js')
-
 const FifoPolicy = require('./policies/fifo.js');
+let Cache = require('./default-cache/abstract-cache.js')
 
 class CacheReplacementPolicy {
   constructor () {
@@ -10,8 +9,16 @@ class CacheReplacementPolicy {
     this._policies.set('fifo', new FifoPolicy());
   }
 
+  /**
+   * Initialize the cache by verifying the interface
+   * @param  {[type]} cache   [description]
+   * @param  {[type]} options [description]
+   * @return {[type]}         [description]
+   */
   createCache(cache, options) {
-    return new Cache(cache, options);
+    // create mixin with external cache and our to match the abstract-cache
+    const tmp = class TmpCache extends Cache(cache) {};
+    return new tmp(options);
   }
 
   /**
@@ -23,7 +30,6 @@ class CacheReplacementPolicy {
     methods.forEach(method => {
       const saveMethod = cache[method];
       cache[method] = (...args) => {
-        console.log('', saveMethod);
         const resSaveMethod = saveMethod(...args);
         cache._events.emit(method, ...args, resSaveMethod);
         return resSaveMethod;
@@ -38,14 +44,17 @@ class CacheReplacementPolicy {
    */
   setPolicy (name, cache) {
     try {
+      // init the cache with new listeners
       this._initPolicy(this._policies.get(name).methods, cache);
+      // apply policy using listeners
+      this._policies.get(name).apply(cache);
     } catch (e) {
       console.error(e);
     }
   }
 
   /**
-   * [_definePolicy description]
+   * Redefine the policy for a specific function of a cache
    * @param  {[type]}   name     [description]
    * @param  {Function} callback [description]
    * @return {[type]}            [description]

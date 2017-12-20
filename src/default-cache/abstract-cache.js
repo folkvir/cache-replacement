@@ -1,5 +1,21 @@
-module.exports = class AbstractCache {
-  constructor () {}
+const EventEmitter = require('events');
+
+let AbstractCache = (superclass) => class extends superclass {
+  constructor(...options) {
+    super(...options);
+    this._options = options;
+    this._variables = new Map();
+    this._events = new EventEmitter();
+    this._methodList = ["get", "set", "has", "clear", "del", "size"]
+    this._methodList.forEach(method => {
+      const superMethode = super[method];
+      if(superMethode) {
+        this[method] = (...args) => {
+          return superMethode.call(this, ...args);
+        }
+      }
+    })
+  }
   /**
    * Get a value for a given key
    * @param  {String} key
@@ -13,9 +29,9 @@ module.exports = class AbstractCache {
    * Set a value for a given key
    * @param  {String} key
    * @param {Object} value   [description]
-   * @param {Object} options optionnal options
+   * @param {Boolean} return true if set or false otherwise
    */
-  set(key, value, options) {
+  set(key, value) {
     throw new Error('Set method not implemented. Parameters: (key, value, options)');
   }
 
@@ -30,7 +46,7 @@ module.exports = class AbstractCache {
 
   /**
    * Reset the cache to an empty cache
-   * @return {void}
+   * @return {Boolean} true if clear, false otherwise
    */
   clear() {
     throw new Error('Clear method not implemented.');
@@ -39,7 +55,7 @@ module.exports = class AbstractCache {
   /**
    * Delete a given key from the cache
    * @param  {[type]} key
-   * @return {Boolean}
+   * @return {Boolean} true if deleted, false otherwise
    */
   del(key) {
     throw new Error('Del method not implemented.');
@@ -53,3 +69,5 @@ module.exports = class AbstractCache {
     throw new Error('Size method not implemented');
   }
 }
+
+module.exports = AbstractCache;

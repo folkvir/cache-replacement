@@ -1,12 +1,18 @@
 const NodeCache = require('node-cache');
 
 module.exports = class NodeCacheWrapper extends NodeCache{
-  constructor(options) {
-    super(options);
+  constructor(...options) {
+    super(...options);
   }
 
   clear() {
-    this.flushAll();
+    try {
+      this.flushAll();
+      return true
+    } catch (e) {
+      throw e;
+    }
+    return false;
   }
 
   size() {
