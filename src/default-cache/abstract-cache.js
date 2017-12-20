@@ -32,7 +32,7 @@ let AbstractCache = (superclass) => class extends superclass {
    * @param {Boolean} return true if set or false otherwise
    */
   set(key, value) {
-    throw new Error('Set method not implemented. Parameters: (key, value, options)');
+    throw new Error('Set method not implemented. Parameters: (key, value)');
   }
 
   /**

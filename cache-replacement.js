@@ -1,4 +1,4 @@
 const main = require('./src/main.js');
-const fifo = require('./src/policies/fifo.js')
+const defaultCache = require('./src/default-cache/node-cache.js')
 
-module.exports = { main, FIFO: fifo }
+module.exports = { main, cache: defaultCache }

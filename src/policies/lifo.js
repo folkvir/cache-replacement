@@ -1,6 +1,3 @@
-const CacheReplacementPolicy = require('../main.js');
-const lmerge = require('lodash.merge');
-const Cache = require('node-cache');
 const FIFOQueue = require('fifo');
 const debug = require('debug')('lifo');
 
