@@ -2,7 +2,7 @@ const Cache = require('./../src/default-cache/node-cache.js');
 const CacheReplacementPolicy = require('./../src/main.js');
 const assert = require('assert');
 
-describe('Testing the fifo policy', function() {
+describe('Testing the lifo policy', function() {
   it('should return undefined when no element in the cache', function() {
     let cr = new CacheReplacementPolicy();
     let cache = cr.createCache(Cache);
@@ -46,16 +46,16 @@ describe('Testing the fifo policy', function() {
     assert.deepEqual(r2, 43);
     assert.deepEqual(cache.size(), 1);
   });
-  it('should correctly delete the first element (cache size =2)', function() {
+  it('should correctly delete the last element (cache size =2)', function() {
     let cr = new CacheReplacementPolicy();
     let cache = cr.createCache(Cache, {max: 2});
-    cr.setPolicy('fifo', cache)
+    cr.setPolicy('lifo', cache)
     const r = cache.set('titi', 42);
     const r1 = cache.set('toto', 43);
     const r2 = cache.set('tata', 44);
     const r3 = cache.get('titi'), r4 = cache.get('toto'), r5 = cache.get('tata');
-    assert.deepEqual(r3, undefined);
-    assert.deepEqual(r4, 43);
+    assert.deepEqual(r3, 42);
+    assert.deepEqual(r4, undefined);
     assert.deepEqual(r5, 44);
     assert.deepEqual(cache.size(), 2);
   });

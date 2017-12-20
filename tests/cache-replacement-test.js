@@ -34,4 +34,13 @@ describe('Setting policies', function() {
       assert('An error occured when setting the replacement policy of the cache...', e);
     }
   });
+  it('should return no error when setting the lifo policy', function() {
+    try {
+      let cr = new CacheReplacementPolicy();
+      let cache = cr.createCache(Cache);
+      cr.setPolicy('lifo', cache)
+    } catch (e) {
+      assert('An error occured when setting the replacement policy of the cache...', e);
+    }
+  });
 });
