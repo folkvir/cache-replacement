@@ -1,4 +1,4 @@
-const FIFOQueue = require('fifo');
+const FIFOQueue = require('../utils/map-double-linked-list.js');
 const debug = require('debug')('fifo');
 
 /**
@@ -52,11 +52,9 @@ module.exports = class FifoPolicy {
     cache._events.on('del', (key, result) => {
       debug('Calling method del with: ', key, result, "...");
       if(result && !cache.has(key)) {
-        cache._variables.get('fifoqueue').bump(key);
-        cache._variables.get('fifoqueue').pop();
+        cache._variables.get('fifoqueue').remove(cache._variables.get('fifoqueue').find(key));
       } else if(result && cache.has(key)){
-        cache._variables.get('fifoqueue').bump(key);
-        cache._variables.get('fifoqueue').pop();
+        cache._variables.get('fifoqueue').remove(cache._variables.get('fifoqueue').find(key));
         cache.del(key);
       }
     });

@@ -1,14 +1,16 @@
 const lmerge = require('lodash.merge');
 const EventEmitter = require('events');
-const FifoPolicy = require('./policies/fifo.js');
-const LifoPolicy = require('./policies/lifo.js');
+const FIFOPolicy = require('./policies/fifo.js');
+const LIFOPolicy = require('./policies/lifo.js');
+const LRUPolicy = require('./policies/lru.js');
 let Cache = require('./default-cache/abstract-cache.js')
 
 class CacheReplacementPolicy {
   constructor () {
     this._policies = new Map();
-    this.addPolicy('fifo', FifoPolicy)
-    this.addPolicy('lifo', LifoPolicy)
+    this.addPolicy('fifo', FIFOPolicy)
+    this.addPolicy('lifo', LIFOPolicy)
+    this.addPolicy('lru', LRUPolicy)
   }
 
   /**
