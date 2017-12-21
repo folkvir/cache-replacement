@@ -46,17 +46,43 @@ describe('Testing the LRU policy', function() {
     assert.deepEqual(r2, 43);
     assert.deepEqual(cache.size(), 1);
   });
-  it('should correctly delete the last element (cache size =2)', function() {
+  it('should correctly delete the least recently used element [method get] (cache size =2)', function() {
     let cr = new CacheReplacementPolicy();
     let cache = cr.createCache(Cache, {max: 2});
     cr.setPolicy('lru', cache)
     const r = cache.set('titi', 42);
     const r1 = cache.set('toto', 43);
-    const r2 = cache.set('tata', 44);
-    const r3 = cache.get('titi'), r4 = cache.get('toto'), r5 = cache.get('tata');
-    assert.deepEqual(r3, 42);
+    const r2 = cache.get('titi');
+    const r3 = cache.set('tata', 44);
+    const r4 = cache.get('toto');
     assert.deepEqual(r4, undefined);
-    assert.deepEqual(r5, 44);
+    assert.deepEqual(cache.size(), 2);
+  });
+  it('should correctly delete the least recently used element [method has] (cache size =2)', function() {
+    let cr = new CacheReplacementPolicy();
+    let cache = cr.createCache(Cache, {max: 2});
+    cr.setPolicy('lru', cache)
+    const r = cache.set('titi', 42);
+    const r1 = cache.set('toto', 43);
+    const r2 = cache.has('titi');
+    const r3 = cache.set('tata', 44);
+    const r4 = cache.get('toto');
+    assert.deepEqual(r2, true);
+    assert.deepEqual(r4, undefined);
+    assert.deepEqual(cache.size(), 2);
+  });
+  it('should correctly delete the least recently used element [method set] (cache size =2)', function() {
+    let cr = new CacheReplacementPolicy();
+    let cache = cr.createCache(Cache, {max: 2});
+    cr.setPolicy('lru', cache)
+    const r = cache.set('titi', 42);
+    const r1 = cache.set('toto', 43);
+    const r2 = cache.set('titi', 56);
+    const r3 = cache.set('tata', 44);
+    const r4 = cache.get('toto');
+    assert.deepEqual(r4, undefined);
+    const r5 = cache.get('titi');
+    assert.deepEqual(r5, 56);
     assert.deepEqual(cache.size(), 2);
   });
 });

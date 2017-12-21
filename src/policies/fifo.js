@@ -27,7 +27,7 @@ module.exports = class FifoPolicy {
   policySet(cache) {
     cache._events.on('set', (key, value, result) => {
       debug('Calling method set with: ', key, value, result, "... Cache Options: ", cache._variables.get('options'));
-      if(result && cache.has(key)){
+      if(result){
         const max = cache._variables.get('options').max, size = cache._variables.get('fifoqueue').length;
         if(size >= max) {
           debug('Deleting the first key because max cache length');
@@ -39,23 +39,19 @@ module.exports = class FifoPolicy {
         }
         debug('Adding the key to the fifo queue');
         cache._variables.get('fifoqueue').push(key);
-        debug(cache._variables.get('fifoqueue'));
       } else {
         // noop, just set the variable in the cache
         debug('Simple behavior');
       }
-      debug('fifoqueue size: ', cache._variables.get('fifoqueue').length, ' IsInCache: ', cache.has(key))
+      debug('fifoqueue size: ', cache._variables.get('fifoqueue').length)
     });
   }
 
   policyDel(cache) {
     cache._events.on('del', (key, result) => {
       debug('Calling method del with: ', key, result, "...");
-      if(result && !cache.has(key)) {
+      if(result) {
         cache._variables.get('fifoqueue').remove(cache._variables.get('fifoqueue').find(key));
-      } else if(result && cache.has(key)){
-        cache._variables.get('fifoqueue').remove(cache._variables.get('fifoqueue').find(key));
-        cache.del(key);
       }
     });
   }

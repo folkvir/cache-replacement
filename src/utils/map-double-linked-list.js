@@ -19,11 +19,18 @@ module.exports = class MapDoubleLinkedList extends FIFO {
   }
 
   // deletion (just redefine remove because pop and shift use this method)
-  remove(node) {
-    const value = super.remove(node);
-    this._map.delete(value);
-    return value;
+  pop(key) {
+    const node = super.pop(key);
+    this._map.delete(node.value)
+    return node;
   }
+
+  shift(key) {
+    const node = super.shift(key);
+    this._map.delete(node.value);
+    return node;
+  }
+
 
   /**
    * Return a node given its value

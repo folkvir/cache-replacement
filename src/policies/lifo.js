@@ -1,4 +1,4 @@
-const FIFOQueue = require('../utils/map-double-linked-list.js');
+const LIFOQueue = require('../utils/map-double-linked-list.js');
 const debug = require('debug')('lifo');
 
 /**
@@ -18,7 +18,7 @@ module.exports = class FifoPolicy {
     // initialize variable for ou policy
     const options = cache._options[0] === undefined && { max: Infinity } || cache._options[0];
     cache._variables.set('options', options)
-    cache._variables.set('fifoqueue', new FIFOQueue())
+    cache._variables.set('lifoqueue', new LIFOQueue())
     this.policySet(cache);
     this.policyDel(cache);
     this.policyClear(cache);
@@ -27,35 +27,32 @@ module.exports = class FifoPolicy {
   policySet(cache) {
     cache._events.on('set', (key, value, result) => {
       debug('Calling method set with: ', key, value, result, "... Cache Options: ", cache._variables.get('options'));
-      if(result && cache.has(key)){
-        const max = cache._variables.get('options').max, size = cache._variables.get('fifoqueue').length;
+      const has = cache._variables.get('lifoqueue')._map.has(key);
+      if(result){
+        const max = cache._variables.get('options').max, size = cache._variables.get('lifoqueue').length;
         if(size >= max) {
           debug('Deleting the last key because max cache length');
           // delete the first element in the queue and delete the element in the cache
 
-          const oldKey = cache._variables.get('fifoqueue').pop();
+          const oldKey = cache._variables.get('lifoqueue').pop();
 
           if(oldKey !== key) cache.del(oldKey);
         }
-        debug('Adding the key to the fifo queue');
-        cache._variables.get('fifoqueue').push(key);
-        debug(cache._variables.get('fifoqueue'));
+        debug('Adding the key to the lifo queue');
+        cache._variables.get('lifoqueue').push(key);
       } else {
         // noop, just set the variable in the cache
         debug('Simple behavior');
       }
-      debug('fifoqueue size: ', cache._variables.get('fifoqueue').length, ' IsInCache: ', cache.has(key))
+      debug('lifoqueue size: ', cache._variables.get('lifoqueue').length);
     });
   }
 
   policyDel(cache) {
     cache._events.on('del', (key, result) => {
       debug('Calling method del with: ', key, result, "...");
-      if(result && !cache.has(key)) {
-        cache._variables.get('fifoqueue').remove(cache._variables.get('fifoqueue').find(key));
-      } else if(result && cache.has(key)){
-        cache._variables.get('fifoqueue').remove(cache._variables.get('fifoqueue').find(key));
-        cache.del(key);
+      if(result) {
+        cache._variables.get('lifoqueue').remove(cache._variables.get('lifoqueue').find(key));
       }
     });
   }
@@ -63,7 +60,7 @@ module.exports = class FifoPolicy {
   policyClear(cache) {
     cache._events.on('clear', (result) => {
       debug('Calling method clear with: ', result, "...");
-      cache._variables.get('fifoqueue').clear();
+      cache._variables.get('lifoqueue').clear();
     });
   }
 }
