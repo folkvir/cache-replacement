@@ -2,6 +2,17 @@ const Cache = require('./../src/default-cache/node-cache.js');
 const CacheReplacementPolicy = require('./../src/main.js');
 const assert = require('assert');
 
+const ENABLE_PRINT = false;
+
+const print = (cache) => {
+  if(ENABLE_PRINT) {
+    console.log('Print the lru queue: ');
+    cache._variables.get('lruqueue').forEach(function(val, node) {
+      console.log(`** ${val}`);
+    });
+  }
+};
+
 describe('Testing the LRU policy', function() {
   it('should return undefined when no element in the cache', function() {
     let cr = new CacheReplacementPolicy();
@@ -71,18 +82,39 @@ describe('Testing the LRU policy', function() {
     assert.deepEqual(r4, undefined);
     assert.deepEqual(cache.size(), 2);
   });
-  it('should correctly delete the least recently used element [method set] (cache size =2)', function() {
+  it('should correctly delete the least recently used element [method set] (cache size =3)', function() {
     let cr = new CacheReplacementPolicy();
-    let cache = cr.createCache(Cache, {max: 2});
+    let cache = cr.createCache(Cache, {max: 3});
     cr.setPolicy('lru', cache)
     const r = cache.set('titi', 42);
+    print(cache);
+    assert.deepEqual(cache._variables.get('lruqueue').last(), 'titi');
     const r1 = cache.set('toto', 43);
+    print(cache);
+    assert.deepEqual(cache._variables.get('lruqueue').last(), 'toto');
+    assert.equal(r1, true);
     const r2 = cache.set('titi', 56);
+    print(cache);
+    assert.deepEqual(cache._variables.get('lruqueue').last(), 'titi');
+    assert.deepEqual(cache._variables.get('lruqueue').first(), 'toto');
+    assert.equal(r2, true);
     const r3 = cache.set('tata', 44);
-    const r4 = cache.get('toto');
-    assert.deepEqual(r4, undefined);
+    assert.equal(r3, true);
+    print(cache);
+    assert.deepEqual(cache._variables.get('lruqueue').last(), 'tata');
+    assert.deepEqual(cache._variables.get('lruqueue').first(), 'toto');
+    const r4 = cache.set('tutu', "Qu'est-ce qu'un élémentaire de fromage ? un emmental !");
+    // now we have toto => titi => tata => tutu
+    print(cache);
+    assert.deepEqual(cache._variables.get('lruqueue').last(), 'tutu');
+    assert.deepEqual(cache._variables.get('lruqueue').first(), 'titi');
+    // now we have toto => titi => tata => tutu
+    print(cache);
     const r5 = cache.get('titi');
     assert.deepEqual(r5, 56);
-    assert.deepEqual(cache.size(), 2);
+    // now we have toto => tata => tutu => titi
+    assert.deepEqual(cache._variables.get('lruqueue').last(), 'titi');
+    assert.deepEqual(cache._variables.get('lruqueue').first(), 'tata');
+    assert.deepEqual(cache.size(), 3);
   });
 });

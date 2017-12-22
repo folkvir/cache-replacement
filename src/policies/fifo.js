@@ -27,7 +27,7 @@ module.exports = class FifoPolicy {
   policySet(cache) {
     cache._events.on('set', (key, value, result) => {
       debug('Calling method set with: ', key, value, result, "... Cache Options: ", cache._variables.get('options'));
-      if(result){
+      if(result && !cache._variables.get('fifoqueue')._map.has(key)){
         const max = cache._variables.get('options').max, size = cache._variables.get('fifoqueue').length;
         if(size >= max) {
           debug('Deleting the first key because max cache length');
