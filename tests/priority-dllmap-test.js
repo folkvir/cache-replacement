@@ -1,4 +1,4 @@
-const PDLLMap = require('../src/utils/priority-double-linked-list.js');
+const PDLLMap = require('../src/utils/pmdll.js');
 const assert = require('assert');
 
 const ENABLE_PRINT = process.env.DEBUG?true:false;
@@ -39,7 +39,7 @@ describe('Priority Double Linked List with Map', function() {
       let list = new PDLLMap();
       list.set('a');
       list.set('b');
-			print(list);
+			list.print();
       assert.equal(list.length, 2);
       assert.equal(list.first(), 'a');
       assert.equal(list.last(), 'b');
@@ -48,7 +48,7 @@ describe('Priority Double Linked List with Map', function() {
       let list = new PDLLMap();
       list.set('a');
       list.set('a');
-      assert.equal(list._map.get('a').priority, 2);
+      assert.equal(list.getPriority('a'), 2);
       print(list);
       assert.equal(list.length, 1);
       assert.equal(list.first(), 'a');
@@ -67,16 +67,16 @@ describe('Priority Double Linked List with Map', function() {
       let list = new PDLLMap();
       list.set('a');
       list.set('b');
-      assert.equal(list._map.get('a').priority, 1);
-      assert.equal(list._map.get('b').priority, 1);
+      assert.equal(list.getPriority('a'), 1);
+      assert.equal(list.getPriority('b'), 1);
       print(list);
       assert.equal(list.length, 2);
       assert.equal(list.first(), 'a');
       assert.equal(list.last(), 'b');
       list.set('a');
       print(list);
-      assert.equal(list._map.get('a').priority, 2);
-      assert.equal(list._map.get('b').priority, 1);
+      assert.equal(list.getPriority('a'), 2);
+      assert.equal(list.getPriority('b'), 1);
       assert.equal(list.first(), 'b', 'First element need to be b');
       assert.equal(list.last(), 'a', 'Last element need to be a');
     });
@@ -85,8 +85,8 @@ describe('Priority Double Linked List with Map', function() {
       let list = new PDLLMap();
       list.set('a');
       list.set('b');
-      assert.equal(list._map.get('a').priority, 1);
-      assert.equal(list._map.get('b').priority, 1);
+      assert.equal(list.getPriority('a'), 1);
+      assert.equal(list.getPriority('b'), 1);
       print(list);
       assert.equal(list.length, 2);
       assert.equal(list.first(), 'a');
@@ -104,8 +104,8 @@ describe('Priority Double Linked List with Map', function() {
 
       list.set('a');
       print(list);
-      assert.equal(list._map.get('a').priority, 2);
-      assert.equal(list._map.get('b').priority, 1);
+      assert.equal(list.getPriority('a'), 2);
+      assert.equal(list.getPriority('b'), 1);
       assert.equal(list.first(), 'b', 'First element need to be b');
       assert.equal(list.last(), 'a', 'Last element need to be a');
 
@@ -114,8 +114,8 @@ describe('Priority Double Linked List with Map', function() {
       let list = new PDLLMap();
       list.set('a');
       list.set('b');
-      assert.equal(list._map.get('a').priority, 1);
-      assert.equal(list._map.get('b').priority, 1);
+      assert.equal(list.getPriority('a'), 1);
+      assert.equal(list.getPriority('b'), 1);
       print(list);
       assert.equal(list.length, 2);
       assert.equal(list.first(), 'a');
@@ -133,15 +133,15 @@ describe('Priority Double Linked List with Map', function() {
 
       list.set('a');
       print(list);
-      assert.equal(list._map.get('a').priority, 2);
-      assert.equal(list._map.get('b').priority, 1);
+      assert.equal(list.getPriority('a'), 2);
+      assert.equal(list.getPriority('b'), 1);
       assert.equal(list.first(), 'b', 'First element need to be b');
       assert.equal(list.last(), 'a', 'Last element need to be a');
 
       list.set('e');
       print(list);
-      assert.equal(list._map.get('a').priority, 2);
-      assert.equal(list._map.get('b').priority, 1);
+      assert.equal(list.getPriority('a'), 2);
+      assert.equal(list.getPriority('b'), 1);
       assert.equal(list.first(), 'b', 'First element need to be b');
       assert.equal(list.last(), 'a', 'Last element need to be a');
 
@@ -151,8 +151,8 @@ describe('Priority Double Linked List with Map', function() {
       let list = new PDLLMap();
       list.set('a');
       list.set('b');
-      assert.equal(list._map.get('a').priority, 1);
-      assert.equal(list._map.get('b').priority, 1);
+      assert.equal(list.getPriority('a'), 1);
+      assert.equal(list.getPriority('b'), 1);
       print(list);
       assert.equal(list.length, 2);
       assert.equal(list.first(), 'a');
@@ -170,15 +170,15 @@ describe('Priority Double Linked List with Map', function() {
 
       list.set('a');
       print(list);
-      assert.equal(list._map.get('a').priority, 2);
-      assert.equal(list._map.get('b').priority, 1);
+      assert.equal(list.getPriority('a'), 2);
+      assert.equal(list.getPriority('b'), 1);
       assert.equal(list.first(), 'b', 'First element need to be b');
       assert.equal(list.last(), 'a', 'Last element need to be a');
 
       list.set('e');
       print(list);
-      assert.equal(list._map.get('a').priority, 2);
-      assert.equal(list._map.get('b').priority, 1);
+      assert.equal(list.getPriority('a'), 2);
+      assert.equal(list.getPriority('b'), 1);
       assert.equal(list.first(), 'b', 'First element need to be b');
       assert.equal(list.last(), 'a', 'Last element need to be a');
 
@@ -188,7 +188,6 @@ describe('Priority Double Linked List with Map', function() {
 			let list = new PDLLMap();
       setm(arr, list);
 			assert.equal(list.first(), 'b');
-			assert.equal(list.find(list.first()).node.value, 'a')
 			assert.equal(list.last(), 'd');
     });
 		it('should correctly add all elements with the right frequency after settng a frequency to 2', function() {
@@ -203,7 +202,7 @@ describe('Priority Double Linked List with Map', function() {
 			const arr = ['a', 'a', 'a', 'a', 'a', 'a'];
 			let list = new PDLLMap();
       setm(arr, list);
-			assert.equal(list._getPriority('a'), 6);
+			assert.equal(list.getPriority('a'), 6);
 			assert.equal(list.last(), 'a');
     });
 
@@ -212,7 +211,7 @@ describe('Priority Double Linked List with Map', function() {
 			let list = new PDLLMap();
       setm(arr, list);
 			list.print();
-			list.remove(list.find('b'));
+			list.delete(list.get('b'));
 			list.print();
 			assert.equal(list.last(), 'c');
     });
