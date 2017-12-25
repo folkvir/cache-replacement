@@ -1,7 +1,15 @@
 const PDLLMap = require('../src/utils/priority-double-linked-list.js');
 const assert = require('assert');
 
-const ENABLE_PRINT = true
+const ENABLE_PRINT = process.env.DEBUG?true:false;
+
+const setm = (arr, queue) => {
+	arr.forEach(a => {
+		if(ENABLE_PRINT) console.log(`Adding ${a} to the queue...`);
+		queue.set(a);
+		print(queue);
+	});
+};
 
 const print = (queue) => {
   if(ENABLE_PRINT) {
@@ -24,14 +32,17 @@ describe('Priority Double Linked List with Map', function() {
       let list = new PDLLMap();
       list.set('a');
       assert.equal(list.length, 1);
+			assert.equal(list.first(), 'a');
+      assert.equal(list.last(), 'a');
     });
     it('should correctly add 2 different elements in the right order', function() {
       let list = new PDLLMap();
       list.set('a');
       list.set('b');
+			print(list);
       assert.equal(list.length, 2);
-      assert.equal(list.first(), 'b');
-      assert.equal(list.last(), 'a');
+      assert.equal(list.first(), 'a');
+      assert.equal(list.last(), 'b');
     });
     it('should correctly set the frequency to 2 instead of creating 2 elements', function() {
       let list = new PDLLMap();
@@ -50,7 +61,7 @@ describe('Priority Double Linked List with Map', function() {
       list.set('c');
       for(var n = list.node; n !== null; n = list.next(n)){
         console.log(n.value);
-      }      
+      }
     });
     it('should correctly set the frequency to 2  for element a (size = 2)', function() {
       let list = new PDLLMap();
@@ -60,14 +71,14 @@ describe('Priority Double Linked List with Map', function() {
       assert.equal(list._map.get('b').priority, 1);
       print(list);
       assert.equal(list.length, 2);
-      assert.equal(list.first(), 'b');
-      assert.equal(list.last(), 'a');
-      list.set('b');
+      assert.equal(list.first(), 'a');
+      assert.equal(list.last(), 'b');
+      list.set('a');
       print(list);
-      assert.equal(list._map.get('b').priority, 2);
-      assert.equal(list._map.get('a').priority, 1);
-      assert.equal(list.first(), 'a', 'First element need to be a');
-      assert.equal(list.last(), 'b', 'Last element need to be b');
+      assert.equal(list._map.get('a').priority, 2);
+      assert.equal(list._map.get('b').priority, 1);
+      assert.equal(list.first(), 'b', 'First element need to be b');
+      assert.equal(list.last(), 'a', 'Last element need to be a');
     });
 
     it('should correctly set the frequency to 2  for element a (size = 4)', function() {
@@ -78,25 +89,25 @@ describe('Priority Double Linked List with Map', function() {
       assert.equal(list._map.get('b').priority, 1);
       print(list);
       assert.equal(list.length, 2);
-      assert.equal(list.first(), 'b');
-      assert.equal(list.last(), 'a');
+      assert.equal(list.first(), 'a');
+      assert.equal(list.last(), 'b');
       list.set('c');
       print(list);
       assert.equal(list.length, 3);
-      assert.equal(list.first(), 'c');
-      assert.equal(list.last(), 'a');
+      assert.equal(list.first(), 'a');
+      assert.equal(list.last(), 'c');
       list.set('d');
       print(list);
       assert.equal(list.length, 4);
-      assert.equal(list.first(), 'd');
-      assert.equal(list.last(), 'a');
-      
+      assert.equal(list.first(), 'a');
+      assert.equal(list.last(), 'd');
+
       list.set('a');
       print(list);
       assert.equal(list._map.get('a').priority, 2);
       assert.equal(list._map.get('b').priority, 1);
-      assert.equal(list.first(), 'a', 'First element need to be b');
-      assert.equal(list.last(), 'd', 'Last element need to be a');
+      assert.equal(list.first(), 'b', 'First element need to be b');
+      assert.equal(list.last(), 'a', 'Last element need to be a');
 
     });
     it('should correctly add the new element at the beginning, not at the end after adding several elements and setting the frequency of a to 2 (size = 5)', function() {
@@ -119,7 +130,7 @@ describe('Priority Double Linked List with Map', function() {
       assert.equal(list.length, 4);
       assert.equal(list.first(), 'a');
       assert.equal(list.last(), 'd');
-      
+
       list.set('a');
       print(list);
       assert.equal(list._map.get('a').priority, 2);
@@ -134,6 +145,76 @@ describe('Priority Double Linked List with Map', function() {
       assert.equal(list.first(), 'b', 'First element need to be b');
       assert.equal(list.last(), 'a', 'Last element need to be a');
 
+    });
+
+		it('should correctly add the new element after adding several elements and setting the frequency of a to 2 (size = 5)', function() {
+      let list = new PDLLMap();
+      list.set('a');
+      list.set('b');
+      assert.equal(list._map.get('a').priority, 1);
+      assert.equal(list._map.get('b').priority, 1);
+      print(list);
+      assert.equal(list.length, 2);
+      assert.equal(list.first(), 'a');
+      assert.equal(list.last(), 'b');
+      list.set('c');
+      print(list);
+      assert.equal(list.length, 3);
+      assert.equal(list.first(), 'a');
+      assert.equal(list.last(), 'c');
+      list.set('d');
+      print(list);
+      assert.equal(list.length, 4);
+      assert.equal(list.first(), 'a');
+      assert.equal(list.last(), 'd');
+
+      list.set('a');
+      print(list);
+      assert.equal(list._map.get('a').priority, 2);
+      assert.equal(list._map.get('b').priority, 1);
+      assert.equal(list.first(), 'b', 'First element need to be b');
+      assert.equal(list.last(), 'a', 'Last element need to be a');
+
+      list.set('e');
+      print(list);
+      assert.equal(list._map.get('a').priority, 2);
+      assert.equal(list._map.get('b').priority, 1);
+      assert.equal(list.first(), 'b', 'First element need to be b');
+      assert.equal(list.last(), 'a', 'Last element need to be a');
+
+    });
+		it('should correctly add all elements with the right frequency', function() {
+			const arr = ['a', 'b', 'c', 'd', 'e', 'f', 'a', 'b', 'a', 'f', 'b', 'c'];
+			let list = new PDLLMap();
+      setm(arr, list);
+			assert.equal(list.first(), 'b');
+			assert.equal(list.find(list.first()).node.value, 'a')
+			assert.equal(list.last(), 'd');
+    });
+		it('should correctly add all elements with the right frequency after settng a frequency to 2', function() {
+			const arr = ['a', 'b', 'c', 'a', 'e', 'a'];
+			let list = new PDLLMap();
+      setm(arr, list);
+			assert.equal(list.first(), 'b');
+			assert.equal(list.last(), 'a');
+    });
+
+		it('should correctly add all elements with the right frequency after settng a frequency to 2', function() {
+			const arr = ['a', 'a', 'a', 'a', 'a', 'a'];
+			let list = new PDLLMap();
+      setm(arr, list);
+			assert.equal(list._getPriority('a'), 6);
+			assert.equal(list.last(), 'a');
+    });
+
+		it('should not remove th rest of the list', function() {
+			const arr = ['a', 'b', 'c'];
+			let list = new PDLLMap();
+      setm(arr, list);
+			list.print();
+			list.remove(list.find('b'));
+			list.print();
+			assert.equal(list.last(), 'c');
     });
   });
 });
