@@ -47,6 +47,7 @@ module.exports = class PriorityDoubleLinkedList {
      */
     set(value) {
         if(this.size() === 0) {
+            debug('No element in the queue.');
             return this._push(value);
         } else {
             const pfirst = this.first();
@@ -55,14 +56,53 @@ module.exports = class PriorityDoubleLinkedList {
             // find the place to be.
             let node;
             if(!this.has(value)) {
+                debug('The element does not exist, just create it.')
                 node = this._unshift(value);
             } else {
+                debug('The element already exist, increase the priority and replace the node');
                 // increase the priority
                 this.increase(value);
+                node = this.get(value);
             }
-
+            const place = this._goDown(node, this.getPriority(value));
+            
+            this._addAfter(place, node)
             
         }
+    }
+
+    _goDown(node, priority) {
+		debug('godown: ', node.value, node.prev.value, node.next.value);
+        let next = this.queue.next(node);
+        if(next === null) {
+            debug('godown: [*] stop cause we are at the end', node.value)
+            return node;
+        }
+        const prio = this.getPriority(next.value);
+        if (priority >= prio) {
+            debug('godown: continue to search...')
+            return this._goDown(next, priority);
+        } else {
+            debug('godown: [*] stop cause we found a place to be.');
+            return node;
+        }
+    }
+
+    /**
+     * @private
+     * @param {*} prev 
+     * @param {*} node 
+     */
+    _addAfter(prev, node) {
+        // node.prev.link(node.next)
+
+        // node.prev.link(node.next);
+        this.print()
+		debug('addafter: ', prev.value, node.value)
+        node.link(prev.next);
+        prev.link(node);
+        if(!node.list) node.list = this.queue.list;
+        return node;
     }
 
     increase (value) {
