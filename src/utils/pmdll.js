@@ -25,7 +25,17 @@ module.exports = class PriorityDoubleLinkedList {
         return this.size();
     }
 
-    // redefinition of insertions
+    get leastFrequent () {
+        const lf = this.first();
+        debug('leastfrequent: ', lf);
+        return lf;
+    }
+    get mostFrequent () {
+        const mf = this.last();
+        debug('mostfrequent: ', mf);
+        return mf;
+    }
+    
     _push(value, priority = 1) {
         debug('push: ', value);
         const n = this.queue.push(value);
@@ -47,7 +57,7 @@ module.exports = class PriorityDoubleLinkedList {
      */
     set(value) {
         if(this.size() === 0) {
-            debug('No element in the queue.');
+            // debug('No element in the queue.');
             return this._push(value);
         } else {
             const pfirst = this.first();
@@ -56,61 +66,107 @@ module.exports = class PriorityDoubleLinkedList {
             // find the place to be.
             let node;
             if(!this.has(value)) {
-                debug('The element does not exist, just create it.')
+                // debug('The element does not exist, just create it.')
                 node = this._unshift(value);
             } else {
-                debug('The element already exist, increase the priority and replace the node');
+                // debug('The element already exist, increase the priority and replace the node');
                 // increase the priority
                 this.increase(value);
                 node = this.get(value);
             }
+            
+            // firstly, remove the node;
             const place = this._goDown(node, this.getPriority(value));
-            
-            this._addAfter(place, node)
-            
+            //debug('We find a place: ', place.value, ` Prev: ${place.prev.value} Next: ${place.next.value}`)
+
+            return this.moveafter(node, place);
         }
     }
 
-    _goDown(node, priority) {
-		debug('godown: ', node.value, node.prev.value, node.next.value);
-        let next = this.queue.next(node);
-        if(next === null) {
-            debug('godown: [*] stop cause we are at the end', node.value)
-            return node;
-        }
-        const prio = this.getPriority(next.value);
-        if (priority >= prio) {
-            debug('godown: continue to search...')
-            return this._goDown(next, priority);
+    next(node) {
+        // debug(`there is ${this.length} element(s) in the queue, head:`, this.queue.node.value)
+        if (!node) {
+            // debug('next: node is undefined');
+            return this.queue.node
         } else {
-            debug('godown: [*] stop cause we found a place to be.');
-            return node;
+            if(node.next === this.queue.node) {
+                // debug('next; next does nt exists, return null.')
+                return null;
+            } else {
+                // debug('next: next is available, return next.')
+                return node.next;
+            }
         }
     }
 
     /**
-     * @private
-     * @param {*} prev 
+     * Move the node 'node' after the node 'after'
      * @param {*} node 
+     * @param {*} after 
      */
-    _addAfter(prev, node) {
-        // node.prev.link(node.next)
+    moveafter(node, after) {
+        if(node === after) {
+            // debug('moveafter: the chosen node is the same node.')
+            return node;
+        } else if(this.queue.prev(node) === null) {
+            // debug('moveafter: we are the first element');
+            // means we are the first elem
+            if(this.queue.next(node) === null) {
+                // debug('moveafter: we are the first element and the only one element');
+                // means this element is the only one (pren === next === null)
+                return node;
+            } else {
+                // debug('moveafter: we are the first element and at least 2 element in the list');
+                this.queue.remove(node);
+                this.queue.length++;
+                if(this.queue.next(after) === null) {
+                    node.link(this.queue.node);
+                }
+                node.next = after.next;
+                after.next = node;
+                node.prev = after;
+                node.list = this.queue;
+                return node;
+            }
+        } else {
+            // debug('prev is not null')
+            this.queue.remove(node);
+            this.queue.length++;
+            if(this.queue.next(after) === null) {
+                node.link(this.queue.node);
+            }
+            node.next = after.next;
+            after.next = node;
+            node.prev = after;
+            node.list = this.queue;
+            return node;
+        }
+    }
 
-        // node.prev.link(node.next);
-        this.print()
-		debug('addafter: ', prev.value, node.value)
-        node.link(prev.next);
-        prev.link(node);
-        if(!node.list) node.list = this.queue.list;
-        return node;
+    _goDown(node, priority) {
+        let next = this.next(node);
+		//debug('godown: ', node.value, node.prev.value, node.next.value );
+        if(!next || next === null) {
+            //debug('godown: [*] stop cause we are at the end', node.value)
+            return node;
+        }
+        const prio = this.getPriority(next.value);
+        if (next && priority >= prio) {
+            //debug('godown: continue to search...')
+            // process.exit(0)
+            return this._goDown(next, priority);
+        } else {
+            //debug('godown: [*] stop cause we found a place to be.');
+            return node;
+        }
     }
 
     increase (value) {
         const entry = this.queue._map.get(value);
-        debug('Old priority: ', entry.priority);
+        //debug('Old priority: ', entry.priority);
         if(entry) {
             entry.priority++;
-            debug('New priority: ', this.queue._map.get(value).priority);
+            //debug('New priority: ', this.queue._map.get(value).priority);
         }
     }
 
@@ -135,6 +191,7 @@ module.exports = class PriorityDoubleLinkedList {
     delete(value) {
         const node = this.get(value);
         if(node) {
+            this.queue._map.delete(value);
             return this.queue.remove(node)?true:false;
         } else {
             return false;
