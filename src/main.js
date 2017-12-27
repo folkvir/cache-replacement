@@ -4,6 +4,8 @@ const FIFOPolicy = require('./policies/fifo.js');
 const LIFOPolicy = require('./policies/lifo.js');
 const LRUPolicy = require('./policies/lru.js');
 const LFUPolicy = require('./policies/lfu.js');
+const MRUPolicy = require('./policies/mru.js');
+const MFUPolicy = require('./policies/mfu.js');
 let Cache = require('./default-cache/abstract-cache.js')
 
 class CacheReplacementPolicy {
@@ -13,6 +15,8 @@ class CacheReplacementPolicy {
     this.addPolicy('lifo', LIFOPolicy)
     this.addPolicy('lru', LRUPolicy)
     this.addPolicy('lfu', LFUPolicy)
+    this.addPolicy('mru', MRUPolicy)
+    this.addPolicy('mfu', MFUPolicy)
   }
 
   /**
