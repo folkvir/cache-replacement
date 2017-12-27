@@ -198,6 +198,10 @@ module.exports = class PriorityDoubleLinkedList {
         }
     }
 
+    clear(){
+        this.queue.clear();
+    }
+
     first () {
         return this.queue.first();
     }

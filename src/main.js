@@ -3,6 +3,7 @@ const EventEmitter = require('events');
 const FIFOPolicy = require('./policies/fifo.js');
 const LIFOPolicy = require('./policies/lifo.js');
 const LRUPolicy = require('./policies/lru.js');
+const LFUPolicy = require('./policies/lfu.js');
 let Cache = require('./default-cache/abstract-cache.js')
 
 class CacheReplacementPolicy {
@@ -11,6 +12,7 @@ class CacheReplacementPolicy {
     this.addPolicy('fifo', FIFOPolicy)
     this.addPolicy('lifo', LIFOPolicy)
     this.addPolicy('lru', LRUPolicy)
+    this.addPolicy('lfu', LFUPolicy)
   }
 
   /**
