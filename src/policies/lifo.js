@@ -6,7 +6,7 @@ const debug = require('debug')('lifo');
  * See https://en.wikipedia.org/wiki/Cache_replacement_policies#Last_In_First_Out_(LIFO)
  * => All policy events are emitted after the execution of the cache function
  */
-module.exports = class FifoPolicy {
+module.exports = class LIFOPolicy {
   constructor(options) {
     this._methods = ['set', 'del', 'clear'];
   }
