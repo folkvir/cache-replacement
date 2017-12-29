@@ -1,4 +1,7 @@
 # cache-replacement
+
+![Keep Calm and Clear Cache](./src/utils/images/kccc.png)
+
 This is a tool to create your own cache replacement policies.
 We wrap the cache (be carefull to fit the API) you want to use and enable a way to custom the replacement policy that fits your need.
 
