@@ -12,7 +12,7 @@ By default we implemented some replacement policies:
 * **LFU**: Least Frequently Used, the least frequently used value is replaced (O(1) for DEL, GET, leastFrequent and mostFrequent, and O(log N) for SET)
 * **MRU**: Most Recently Used, The most recently used value is replaced. (O(1))
 * **MFU**: Most Frequently Used, the most frequently used calue is replaced. (O(1) then O(log N), same as LFU)
-* **RR**: Random Replacement in the cache (O(1) for every thing);
+* **RR**: Random Replacement in the cache;
 
 
 __Be aware, I do not intend to developp perfect cache replacement policies here
@@ -30,7 +30,7 @@ At least you need to install a cache such as [node-cache](https://www.npmjs.com/
 ```js
 
 const CacheReplacementPolicy = require('cache-replacement').main;
-const Cache = require('node-cache') // or require('cache-replacement').cache
+const Cache = require('cache-replacement').cache; // or require('node-cache') and wrapp it to fit our API
 
 // Create the main class
 let cacheReplacement = new CacheReplacementPolicy();
