@@ -44,7 +44,7 @@ module.exports = class MRUPolicy {
         const max = cache._variables.get('options').max, size = cache._variables.get('mruqueue').length;
         debug('mruqueue size before adding the key : ', size, ' max size: ', max);
         if(size >= max) {
-          debug('Deleting the first key because max cache length and least recent key is always the first element');
+          debug('Deleting the last key because max cache length and most recent key is always the last element');
           // delete the first element in the queue and delete the element in the cache
 
           const oldKey = cache._variables.get('mruqueue').pop();

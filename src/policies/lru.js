@@ -28,8 +28,6 @@ module.exports = class LRUPolicy {
 
   policyGet(cache) {
     cache._events.on('get', (key, result) => {
-      debug('Calling method Get with: ', key, result, "... Cache Options: ", cache._variables.get('options'));
-      debug('Result of getting key:', key, result);
       if(result) {
         const node = cache._variables.get('lruqueue').find(key);
         cache._variables.get('lruqueue').bump(node);
@@ -39,33 +37,23 @@ module.exports = class LRUPolicy {
 
   policySet(cache) {
     cache._events.on('set', (key, value, result) => {
-      debug('Calling method set with: ', key, value, result, "... Cache Options: ", cache._variables.get('options'));
       if(result && !cache._variables.get('lruqueue')._map.has(key)){
         const max = cache._variables.get('options').max, size = cache._variables.get('lruqueue').length;
-        debug('lruqueue size before adding the key : ', size, ' max size: ', max);
         if(size >= max) {
-          debug('Deleting the first key because max cache length and least recent key is always the first element');
           // delete the first element in the queue and delete the element in the cache
-
           const oldKey = cache._variables.get('lruqueue').shift();
-
           if(oldKey !== key) cache.del(oldKey);
         }
-        debug('Adding the key to the lru queue');
         cache._variables.get('lruqueue').push(key);
       } else {
-        debug('Bump the key at the end of the lruqueue');
-        // // always bump the existing key at the end of the queue, in order to reproduce the LRU cache
         const node = cache._variables.get('lruqueue').find(key);
         cache._variables.get('lruqueue').bump(node);
       }
-      debug('lruqueue size after added the key: ', cache._variables.get('lruqueue').length);
     });
   }
 
   policyDel(cache) {
     cache._events.on('del', (key, result) => {
-      debug('Calling method del with: ', key, result, "...");
       if(result) {
         cache._variables.get('lruqueue').remove(cache._variables.get('lruqueue').find(key));
       }
@@ -74,7 +62,6 @@ module.exports = class LRUPolicy {
 
   policyClear(cache) {
     cache._events.on('clear', (result) => {
-      debug('Calling method clear with: ', result, "...");
       cache._variables.get('lruqueue').clear();
     });
   }

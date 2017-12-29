@@ -2,13 +2,20 @@
 This is a tool to create your own cache replacement policies.
 We wrap the cache (be carefull to fit the API) you want to use and enable a way to custom the replacement policy that fits your need.
 
-By default **FIFO**, **LIFO** are implemented.
+By default we implemented some replacement policies:
+* **FIFO**: First In First Out, the first value cached is replaced. (O(1))
+* **LIFO**: Last In First Out, the last value cached is replaced. (O(1))
+* **LRU**: Last Recently Used, the last recently used value cached is replaced. (O(1))
+* **LFU**: Least Frequently Used, the least frequently used value is replaced (O(1) for DEL, GET, leastFrequent and mostFrequent, and O(log N) for SET)
+* **MRU**: Most Recently Used, The most recently used value is replaced. (O(1))
+* **MFU**: Most Frequently Used, the most frequently used calue is replaced. (O(1) then O(log N), same as LFU)
+* **RR**: Random Replacement in the cache (O(1) for every thing);
 
-* FIFO and LIFO are implemented with a fifo queue (see [fifo](https://www.npmjs.com/package/fifo) npm package)
 
 __Be aware, I do not intend to developp perfect cache replacement policies here
 and this tool is not adapt if you want to use a specific cache replacement policy.
-Because a cache replacement policy can be completely developp with more adapted specific data structures accorded to their internal policy replacement.__
+Because a cache replacement policy can be completely developp with more adapted specific data structures accorded to their internal policy replacement. 
+Here we develop ours with a Double Linked List coupled to a Map for O(1) access. For a frequency usage such as LFU or MFU we use the same data structure as before but the Double linked List is modified to be a Double Priority Linked List.__ 
 
 ## Install
 `npm install --save cache-replacement`

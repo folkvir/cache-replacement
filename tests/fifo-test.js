@@ -2,7 +2,7 @@ const Cache = require('./../src/default-cache/node-cache.js');
 const CacheReplacementPolicy = require('./../src/main.js');
 const assert = require('assert');
 
-describe('Testing the fifo policy', function() {
+describe('Testing the FIFO policy', function() {
   it('should return undefined when no element in the cache', function() {
     let cr = new CacheReplacementPolicy();
     let cache = cr.createCache(Cache);
