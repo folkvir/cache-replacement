@@ -248,8 +248,3 @@ git clone https://github.com/folkvir/cache-replacement.js
 npm install
 npm test
 ```
-If you want some debug logs (for example lifo policy) we use the [debug]() package
-```bash
-DEBUG=lifo npm test
-# adapt you code according to your platform
-```

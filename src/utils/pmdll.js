@@ -10,11 +10,9 @@ const debug = require('debug')('pmdll');
  * 3) the first element (head of the list) is the least frequent element
  * 4) the last element (tail of the list) is the most frequent element
  * Complexity:
- * - Set: worst case = O(n), best case = O(1), exceptions (as all same priorities = insert at the end, etc...) are O(1)
+ * - Set: worst case = O(log n), best case = O(1), exceptions (as all same priorities = insert at the end, etc...) are O(1)
  * - Delete: O(1)
- * - Find: O(1)
- * -
- * @type {[type]}
+ * - Get: O(1)
  */
 module.exports = class PriorityDoubleLinkedList {
     constructor() {
