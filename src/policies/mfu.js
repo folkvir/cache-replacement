@@ -1,12 +1,6 @@
 const debug = require('debug')('mfu');
 const mfuqueue = require('../utils/pmdll.js');
 
-
-/**
- * This policy act as a FIFO queue, if a new element is added to the cache and the cache is full then the first element added is deleted.
- * See https://en.wikipedia.org/wiki/Cache_replacement_policies#First_In_First_Out_(FIFO)
- * => All policy events are emitted after the execution of the cache function
- */
 module.exports = class MFUPolicy {
   constructor(options) {
     this._methods = ['set', 'del', 'clear', 'get'];

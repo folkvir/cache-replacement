@@ -1,11 +1,7 @@
 const LIFOQueue = require('../utils/map-double-linked-list.js');
 const debug = require('debug')('lifo');
 
-/**
- * This policy act as a FIFO queue, if a new element is added to the cache and the cache is full then the last element added is deleted.
- * See https://en.wikipedia.org/wiki/Cache_replacement_policies#Last_In_First_Out_(LIFO)
- * => All policy events are emitted after the execution of the cache function
- */
+
 module.exports = class LIFOPolicy {
   constructor(options) {
     this._methods = ['set', 'del', 'clear'];
