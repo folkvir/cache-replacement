@@ -8,10 +8,10 @@ let AbstractCache = (superclass) => class extends superclass {
     this._events = new EventEmitter();
     this._methodList = ["get", "set", "has", "clear", "del", "size"]
     this._methodList.forEach(method => {
-      const superMethode = super[method];
-      if(superMethode) {
+      const superMethod = super[method];
+      if(superMethod) {
         this[method] = (...args) => {
-          return superMethode.call(this, ...args);
+          return superMethod.call(this, ...args);
         }
       }
     })
@@ -19,7 +19,7 @@ let AbstractCache = (superclass) => class extends superclass {
   /**
    * Get a value for a given key
    * @param  {String} key
-   * @return {Object}
+   * @return {Promise<Object>}
    */
   get(key) {
     throw new Error('Get method not implemented.');
@@ -29,7 +29,7 @@ let AbstractCache = (superclass) => class extends superclass {
    * Set a value for a given key
    * @param  {String} key
    * @param {Object} value   [description]
-   * @param {Boolean} return true if set or false otherwise
+   * @param {Promise<Object>} 
    */
   set(key, value) {
     throw new Error('Set method not implemented. Parameters: (key, value)');
@@ -38,7 +38,7 @@ let AbstractCache = (superclass) => class extends superclass {
   /**
    * Check if a key is defined in the cache
    * @param  {String}  key
-   * @return {Boolean}     true or false
+   * @return {c}     true or false
    */
   has(key) {
     throw new Error('Has method not implemented.');
@@ -46,7 +46,7 @@ let AbstractCache = (superclass) => class extends superclass {
 
   /**
    * Reset the cache to an empty cache
-   * @return {Boolean} true if clear, false otherwise
+   * @return {Promise<Boolean>} true if clear, false otherwise
    */
   clear() {
     throw new Error('Clear method not implemented.');
@@ -55,7 +55,7 @@ let AbstractCache = (superclass) => class extends superclass {
   /**
    * Delete a given key from the cache
    * @param  {[type]} key
-   * @return {Boolean} true if deleted, false otherwise
+   * @return {Promise<Boolean>} true if deleted, false otherwise
    */
   del(key) {
     throw new Error('Del method not implemented.');
@@ -63,7 +63,7 @@ let AbstractCache = (superclass) => class extends superclass {
 
   /**
    * Get the size of the cache
-   * @return {Number}
+   * @return {Promise<Number>}
    */
   size() {
     throw new Error('Size method not implemented');

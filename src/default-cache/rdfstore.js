@@ -1,22 +1,30 @@
 const AbstractCache = require('./abstract-cache');
 const RdfStore = require('rdfstore');
 
-module.exports = class RDFStore extends AbstractCache {
-  constructor(options) {
-    super();
-    this.graphURI = options.graphURI && options.graphURI || undefined;
-    this._prefix = options.prefix && options.prefix || undefined;
-    this.store = undefined;
+module.exports = class RDFStore {
+  constructor(options = { prefix: [] }) {
+    this._prefix = [];
+    this._size = 0;
     RdfStore.create((err, store) => {
       this.store = store;
-    });
-    this._size = 0;
+      if(options.prefix.length > 0) options.prefix.forEach(p => this.addPrefix(p.name, p.value));
+      console.log('RDF Store ready.');
+    });  
+  }
+  
+  get prefixes () {
+    return this._prefix;
   }
 
-  get prefixes () {
-    let pre = '';
-    this._prefix.forEach(p => pre += p + '\\' );
-    return pre;
+  addPrefix(name, value) {
+    if(!name || !value) throw new Error('A prefix need to have a name and a value such as {name: "dc", value: "http://..."}');
+    this._prefix.push({name, value});
+    this._setPrefix(name, value);
+  }
+
+  _setPrefix(name, value) {
+    this.store.setPrefix(name, value);
+    console.log('Prefix set: ', name, value);
   }
 
   /**
@@ -27,7 +35,7 @@ module.exports = class RDFStore extends AbstractCache {
   get(key) {
     async function _get(key) {
       return await new Promise(resolve => {
-        this.store.execute(`${this.prefixes} SELECT * { ${key} }`, function(err, results){
+        this.store.execute(`SELECT * { ${key} }`, function(err, results){
           if(!err) {
             resolve(results);
           } else {
@@ -48,9 +56,12 @@ module.exports = class RDFStore extends AbstractCache {
    */
   set(key, value) {
     async function _set(key, value) {
-      return await new Promise(resolve => {
-        this.store.execute(`${this.prefixes} INSERT DATA { ${value.join(' . ')} }`, function(err, results){
+      const res = await new Promise(resolve => {
+        console.log('=> Setting key: ', key, value);
+        const data = value.join(" . ");
+        this.store.execute(`INSERT DATA { ${data} }`, function(err, results){
           if(!err) {
+            console.log('** Key set !')
             resolve(true);
           } else {
             console.warn(err);
@@ -58,10 +69,13 @@ module.exports = class RDFStore extends AbstractCache {
           }
         });
       });
+      return res;
     }
-    if(this.has(key)) {
+    const h = this.has(key);
+    console.log('Sethas', h);
+    if(h) {
       this._size += value.length;
-      return _set(key, value);
+      return _set.sync(this, key, value);
     } else {
       return false;
     }
@@ -73,20 +87,26 @@ module.exports = class RDFStore extends AbstractCache {
    * @return {Boolean}     true or false
    */
   has(key) {
-    async function _has(key) {
-      return await new Promise(resolve => {
-        this.store.execute(`${this.prefixes} ASK { ${key} }`, function(err, results){
-          if(!err) {
-            resolve(true);
+    async function _has (key, self) {
+      return await new Promise((resolve, reject) => {
+        const query = `ASK { ${key} }`;
+        console.log('Query: ', query);
+        self.store.execute(query, (err, results) => {
+          if(err) {
+            console.log(err);
+            reject(err);
           } else {
-            console.warn(err);
-            resolve(false);
+            console.log('Result of query: ', query, results)
+            self._resolve(resolve, results);
           }
         });
-      });
+        console.log('test');
+      })
     }
-    return _has(key);
+    
+    return _has(key, this);
   }
+
 
   /**
    * Reset the cache to an empty cache
@@ -144,4 +164,21 @@ module.exports = class RDFStore extends AbstractCache {
     return this_size;
   }
   
+  _resolve(resolve, results) {
+    setImmediate(() => {
+      resolve(results);
+    });
+  }
+
+  _makeMeLookSync(fn) {
+    let iterator = fn();
+    let loop = result => {
+      !result.done && result.value.then(
+        res => loop(iterator.next(res)),
+        err => loop(iterator.throw(err))
+      );
+    };
+  
+    loop(iterator.next());
+  }
 }
