@@ -13,7 +13,7 @@ module.exports = class NodeCacheWrapper extends NodeCache{
   get(key) {
     return new Promise((resolve, reject) => {
       try {
-        const get = this.super.get(key);
+        const get = super.get(key);
         resolve(get);
       } catch (error) {
         reject(error);
@@ -25,12 +25,12 @@ module.exports = class NodeCacheWrapper extends NodeCache{
    * Set a value for a given key
    * @param  {String} key
    * @param {Object} value   [description]
-   * @param {Promise<Object>} 
+   * @param {Promise<Object>}
    */
   set(key, value) {
     return new Promise((resolve, reject) => {
       try {
-        const set = this.super.set(key, value);
+        const set = super.set(key, value);
         resolve(set);
       } catch (error) {
         reject(error);
@@ -65,7 +65,7 @@ module.exports = class NodeCacheWrapper extends NodeCache{
   clear() {
     return new Promise((resolve, reject) => {
       try {
-        this.super.flushAll();
+        super.flushAll();
         resolve(true)
       } catch (e) {
         reject(e);
@@ -81,7 +81,7 @@ module.exports = class NodeCacheWrapper extends NodeCache{
   del(key) {
     return new Promise((resolve, reject) => {
       try {
-        const del = this.super.del(key);
+        const del = super.del(key);
         resolve(del);
       } catch (error) {
         reject(error);
@@ -96,7 +96,7 @@ module.exports = class NodeCacheWrapper extends NodeCache{
   size() {
     return new Promise((resolve, reject) => {
       try {
-        const size = this.super.getStats().keys;
+        const size = super.getStats().keys;
         resolve(size);
       } catch (error) {
         reject(error);

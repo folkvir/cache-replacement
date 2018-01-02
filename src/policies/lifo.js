@@ -22,32 +22,37 @@ module.exports = class LIFOPolicy {
 
   policySet(cache) {
     cache._events.on('set', (key, value, result) => {
-      const has = cache._variables.get('lifoqueue')._map.has(key);
-      if(result && !cache._variables.get('lifoqueue')._map.has(key)){
-        const max = cache._variables.get('options').max, size = cache._variables.get('lifoqueue').length;
-        if(size >= max) {
-          // delete the first element in the queue and delete the element in the cache
-          const oldKey = cache._variables.get('lifoqueue').pop();
-          if(oldKey !== key) cache.del(oldKey);
+      result.then(res => {
+        const has = cache._variables.get('lifoqueue')._map.has(key);
+        if(res && !cache._variables.get('lifoqueue')._map.has(key)){
+          const max = cache._variables.get('options').max, size = cache._variables.get('lifoqueue').length;
+          if(size >= max) {
+            // delete the first element in the queue and delete the element in the cache
+            const oldKey = cache._variables.get('lifoqueue').pop();
+            if(oldKey !== key) cache.del(oldKey);
+          }
+          cache._variables.get('lifoqueue').push(key);
+        } else {
+          // noop, just set the variable in the cache
         }
-        cache._variables.get('lifoqueue').push(key);
-      } else {
-        // noop, just set the variable in the cache
-      }
+      });
+
     });
   }
 
   policyDel(cache) {
     cache._events.on('del', (key, result) => {
-      if(result) {
-        cache._variables.get('lifoqueue').remove(cache._variables.get('lifoqueue').find(key));
-      }
+      result.then(res => {
+          res && cache._variables.get('lifoqueue').remove(cache._variables.get('lifoqueue').find(key));
+      });
     });
   }
 
   policyClear(cache) {
     cache._events.on('clear', (result) => {
-      cache._variables.get('lifoqueue').clear();
+      result.then(res => {
+        res && cache._variables.get('lifoqueue').clear();
+      });
     });
   }
 }

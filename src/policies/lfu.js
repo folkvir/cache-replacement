@@ -23,37 +23,44 @@ module.exports = class LFUPolicy {
 
   policyGet(cache) {
     cache._events.on('get', (key, result) => {
-      result && cache._variables.get('lfuqueue').set(key);
+      result.then(res => {
+        res && cache._variables.get('lfuqueue').set(key);
+      })
     });
   }
 
   policySet(cache) {
     cache._events.on('set', (key, value, result) => {
-      if(result && !cache._variables.get('lfuqueue').has(key)){
-        const max = cache._variables.get('options').max, size = cache._variables.get('lfuqueue').length;
-        if(size >= max) {
-            // delete the first element in the queue and delete the element in the cache
-            const leastFrequent = cache._variables.get('lfuqueue').leastFrequent;
-            if(leastFrequent != key) cache.del(leastFrequent);
+      result.then(res => {
+        if(res && !cache._variables.get('lfuqueue').has(key)){
+          const max = cache._variables.get('options').max, size = cache._variables.get('lfuqueue').length;
+          if(size >= max) {
+              // delete the first element in the queue and delete the element in the cache
+              const leastFrequent = cache._variables.get('lfuqueue').leastFrequent;
+              if(leastFrequent != key) cache.del(leastFrequent);
+          }
+          cache._variables.get('lfuqueue').set(key);
+        } else {
+          cache._variables.get('lfuqueue').set(key);
         }
-        cache._variables.get('lfuqueue').set(key);
-      } else {
-        cache._variables.get('lfuqueue').set(key);
-      }
+      });
     });
   }
 
   policyDel(cache) {
     cache._events.on('del', (key, result) => {
-      if(result) {
-        cache._variables.get('lfuqueue').delete(key);
-      }
+      result.then(res => {
+        res && cache._variables.get('lfuqueue').delete(key);
+      });
+
     });
   }
 
   policyClear(cache) {
     cache._events.on('clear', (result) => {
-      cache._variables.get('lfuqueue').clear();
+      result.then(res => {
+        res && cache._variables.get('lfuqueue').clear();
+      });
     });
   }
 }
