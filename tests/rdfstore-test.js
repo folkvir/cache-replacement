@@ -7,17 +7,27 @@ const quads = [
   "<http://example/book2> dc:creator \"Edmund Wells\""
 ]
 
-describe('Behavior', function() {
+describe('RDFSTORE AS A CACHE', function() {
   it('Create the RDF store', function() {
     let store = new RdfStore();
     assert.notEqual(store.store, undefined);
   });
-  it('INSERT', function() {
+  it('INSERT/HAS/GET of unique ?x ?y ?z values', async function() {
     let store = new RdfStore();
-    store.set(quads[0], quads[0]);
-    // quads.forEach(q => {
-    //   store.set(q, q);
-    // })
+    let i = 0;
+    for(let q of quads){
+      i++;
+      try {
+        const set = await store.set(q, q);
+        assert.equal(set, true, 'The value has to be inserted in the store.')
+        const has = await store.has(q);
+        assert.equal(has, true, 'The value has to be in the store.')  
+        const get = await store.get("?subject ?predicate ?object");
+        assert.equal(get.length, i, 'The value has to be the same as: '+q);
+      } catch (error) {
+        throw error;
+      }
+    }
   });
 
 });

@@ -1,5 +1,6 @@
 const AbstractCache = require('./abstract-cache');
 const RdfStore = require('rdfstore');
+const debug = require('debug')('rdfstore');
 
 module.exports = class RDFStore {
   constructor(options = { prefix: [] }) {
@@ -8,7 +9,7 @@ module.exports = class RDFStore {
     RdfStore.create((err, store) => {
       this.store = store;
       if(options.prefix.length > 0) options.prefix.forEach(p => this.addPrefix(p.name, p.value));
-      console.log('RDF Store ready.');
+      debug('RDF Store ready.');
     });  
   }
   
@@ -24,7 +25,7 @@ module.exports = class RDFStore {
 
   _setPrefix(name, value) {
     this.store.setPrefix(name, value);
-    console.log('Prefix set: ', name, value);
+    debug('Prefix set: ', name, value);
   }
 
   /**
@@ -32,52 +33,69 @@ module.exports = class RDFStore {
    * @param  {String} key a Triple Pattern <?s ?p ?o> such as "?x db:Person 'toto'"
    * @return {Object}
    */
-  get(key) {
-    async function _get(key) {
-      return await new Promise(resolve => {
-        this.store.execute(`SELECT * { ${key} }`, function(err, results){
+  async get(key) {
+    return new Promise((resolve, reject) => {
+      try {
+        const query = `SELECT * WHERE { ${key} . }`;
+        debug('Query:', query);
+        this.store.execute(query, function(err, results){
           if(!err) {
             resolve(results);
           } else {
             console.warn(err);
             resolve(undefined);
           }
-        });
-      });
-    }
-    return _get(key);
+        });  
+      } catch (error) {
+        reject(error);
+      }
+    });
   }
 
   /**
    * Set a value for a given key
-   * @param  {String} key generic triple pattern such as ?x :a "b"
+   * @param  {String} key generic triple pattern such as ?x :a "b" or the key equal the value
    * @param {Array} value   Array of Triples to store for the given key correspond to the key such as [ "'a' :a "b"",  "'b' :a "b"", ... ] 
    * @param {Boolean} return true if set or false otherwise
    */
-  set(key, value) {
-    async function _set(key, value) {
-      const res = await new Promise(resolve => {
-        console.log('=> Setting key: ', key, value);
+  async set(key, value) {
+    function _set(self, key, value) {
+      return new Promise((resolve, reject) => {
+        if(!Array.isArray(value)) value = [value];
+        debug('=> Setting key: ', key, value);
         const data = value.join(" . ");
-        this.store.execute(`INSERT DATA { ${data} }`, function(err, results){
-          if(!err) {
-            console.log('** Key set !')
-            resolve(true);
-          } else {
-            console.warn(err);
-            resolve(false);
-          }
-        });
+        try {
+          self.store.execute(`INSERT DATA { ${data} }`, function(err, results){
+            if(!err) {
+              resolve(true);
+            } else {
+              console.warn('An error occured during method set:', err);
+              resolve(false);
+            }
+          });  
+        } catch (error) {
+          console.warn('An error occured during method set:', error);
+          reject(error);
+        }
       });
-      return res;
     }
-    const h = this.has(key);
-    console.log('Sethas', h);
-    if(h) {
-      this._size += value.length;
-      return _set.sync(this, key, value);
+
+    if(!await this.has(key)) {
+      try {
+        const res = await _set(this, key, value);
+        debug(res);
+        if(res) {
+          this._size += value.length;
+          return Promise.resolve(true);
+        } else {
+          Promise.resolve(false);
+        }
+      } catch (error) {
+        return Promise.reject(error);
+      }
+      
     } else {
-      return false;
+      return Promise.resolve(false);
     }
   }
 
@@ -86,25 +104,25 @@ module.exports = class RDFStore {
    * @param  {String}  key the key such ?x :a 'b'
    * @return {Boolean}     true or false
    */
-  has(key) {
-    async function _has (key, self) {
-      return await new Promise((resolve, reject) => {
-        const query = `ASK { ${key} }`;
-        console.log('Query: ', query);
-        self.store.execute(query, (err, results) => {
+  async has(key) {
+    return new Promise((resolve, reject) => {
+      const query = `ASK { ${key} }`;
+      debug('Query: ', query);
+      try {
+        this.store.execute(query, (err, results) => {
           if(err) {
-            console.log(err);
+            debug(err);
             reject(err);
           } else {
-            console.log('Result of query: ', query, results)
-            self._resolve(resolve, results);
+            debug('Result of query: ', query, results)
+            resolve(results);
           }
-        });
-        console.log('test');
-      })
-    }
-    
-    return _has(key, this);
+        });  
+      } catch (error) {
+        console.warn('An error occured during method has:', error);
+        reject(error);
+      }
+    })
   }
 
 
@@ -112,21 +130,22 @@ module.exports = class RDFStore {
    * Reset the cache to an empty cache
    * @return {Boolean} true if clear, false otherwise
    */
-  clear() {
-    async function _clear() {
-     const a = await new Promise((resolve) => {
+  async clear() {
+    return await new Promise((resolve, reject) => {
+      try {
         this.store.clear(() => {
           if(err) {
             console.warn(err);
             resolve(false);
-          } 
-          resolve(true);
-        });
-      });
-      return a;
-    }
-    this._size = 0;
-    return _clear();
+          } else {
+            this._size = 0;
+            resolve(true);
+          }
+        });  
+      } catch (error) {
+        reject(error);
+      }
+    });
   }
 
   /**
@@ -134,26 +153,38 @@ module.exports = class RDFStore {
    * @param  {[type]} key
    * @return {Boolean} true if deleted, false otherwise
    */
-  del(key) {
+  async del(key) {
     async function _del(key, value) {
-      return await new Promise(resolve => {
-        this.store.execute(`${this.prefixes} DELETE DATA { ${value.join(' . ')} }`, function(err, results){
-          if(!err) {
-            resolve(true);
-          } else {
-            console.warn(err);
-            resolve(false);
-          }
-        });
+      return await new Promise((resolve, reject) => {
+        try {
+          this.store.execute(`${this.prefixes} DELETE DATA { ${value.join(' . ')} }`, function(err, results){
+            if(!err) {
+              resolve(true);
+            } else {
+              console.warn(err);
+              resolve(false);
+            }
+          });  
+        } catch (error) {
+          reject(error);
+        }
       });
     }
-    if(this.has(key)) {
-      const res = _del(key);
-      this.size = this.size - value.length;
+    if(await this.has(key)) {
+      try {
+        const res = await _del(key);
+        if(res) {
+          this.size = this.size - value.length;
+          return Promise.resolve(true);
+        } else {
+          return Promise.resolve(false);
+        }
+      } catch (error) {
+        return Promise.reject(error);
+      }
     } else {
-      return false;
+      return Promise.resolve(false);
     }
-    return _del(key, value);
   }
 
   /**
@@ -161,24 +192,6 @@ module.exports = class RDFStore {
    * @return {Number}
    */
   size() {
-    return this_size;
-  }
-  
-  _resolve(resolve, results) {
-    setImmediate(() => {
-      resolve(results);
-    });
-  }
-
-  _makeMeLookSync(fn) {
-    let iterator = fn();
-    let loop = result => {
-      !result.done && result.value.then(
-        res => loop(iterator.next(res)),
-        err => loop(iterator.throw(err))
-      );
-    };
-  
-    loop(iterator.next());
+    return Promise.resolve(this_size);
   }
 }

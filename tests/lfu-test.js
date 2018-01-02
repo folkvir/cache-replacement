@@ -2,7 +2,7 @@ const Cache = require('./../src/default-cache/node-cache.js');
 const CacheReplacementPolicy = require('./../src/main.js');
 const assert = require('assert');
 
-const ENABLE_PRINT = true;
+const ENABLE_PRINT = false;
 
 const print = (cache) => {
   if(ENABLE_PRINT) {
