@@ -2,7 +2,7 @@ const Cache = require('./../src/default-cache/node-cache.js');
 const CacheReplacementPolicy = require('./../src/main.js');
 const assert = require('assert');
 
-const ENABLE_PRINT = false;
+const ENABLE_PRINT = true;
 
 const print = (cache) => {
   if(ENABLE_PRINT) {
@@ -62,11 +62,15 @@ describe('Testing the LFU policy', function() {
     let cache = cr.createCache(Cache, {max: 2});
     cr.setPolicy('lfu', cache)
     const r = await cache.set('titi', 42);
+    print(cache);
     const r1 = await cache.set('toto', 43);
+    print(cache);
     assert.equal(cache._variables.get('lfuqueue').leastFrequent, 'titi', 'least frequent titi')
     const r2 = await cache.get('titi');
+    print(cache);
     assert.equal(cache._variables.get('lfuqueue').leastFrequent, 'toto', 'least frequent toto')
     const r3 = await cache.set('tata', 44);
+    print(cache);
     assert.equal(cache._variables.get('lfuqueue').leastFrequent, 'tata', 'least frequent tata')
     assert.equal(cache._variables.get('lfuqueue').mostFrequent, 'titi' , 'most frequent titi')
     assert.deepEqual(await cache.size(), 2);

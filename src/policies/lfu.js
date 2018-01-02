@@ -37,7 +37,9 @@ module.exports = class LFUPolicy {
           if(size >= max) {
               // delete the first element in the queue and delete the element in the cache
               const leastFrequent = cache._variables.get('lfuqueue').leastFrequent;
-              if(leastFrequent != key) cache.del(leastFrequent);
+              if(leastFrequent != key) cache.del(leastFrequent).then(() => {
+                console.log('Key deleted.', leastFrequent)
+              });
           }
           cache._variables.get('lfuqueue').set(key);
         } else {

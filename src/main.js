@@ -39,9 +39,12 @@ class CacheReplacementPolicy {
     methods.forEach(method => {
       const saveMethod = cache[method];
       cache[method] = (...args) => {
-        const resSaveMethod = saveMethod(...args);
-        cache._events.emit(method, ...args, resSaveMethod);
-        return resSaveMethod;
+        return saveMethod(...args).then(r => {
+          cache._events.emit(method, ...args, Promise.resolve(r));
+          return Promise.resolve(r);
+        }).catch(e => {
+          return Promise.reject(r);
+        });
       }
     })
   }

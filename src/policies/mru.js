@@ -23,8 +23,8 @@ module.exports = class MRUPolicy {
   policyGet(cache) {
     cache._events.on('get', (key, result) => {
       result.then((res) => {
-        debug('Calling method Get with: ', key, result, "... Cache Options: ", cache._variables.get('options'));
-        debug('Result of getting key:', key, result);
+        debug('Calling method Get with: ', key, res, "... Cache Options: ", cache._variables.get('options'));
+        debug('Result of getting key:', key, res);
         if(res) {
           const node = cache._variables.get('mruqueue').find(key);
           cache._variables.get('mruqueue').bump(node);
@@ -65,9 +65,7 @@ module.exports = class MRUPolicy {
     cache._events.on('del', (key, result) => {
       result.then((res) => {
         debug('Calling method del with: ', key, res, "...");
-        if(res) {
-          cache._variables.get('mruqueue').delete(key);
-        }
+        res && cache._variables.get('mruqueue').remove(cache._variables.get('mruqueue').find(key));
       });
     });
   }
