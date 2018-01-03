@@ -2,127 +2,124 @@ const AbstractCache = require('./abstract-cache');
 const RdfStore = require('rdfstore');
 const debug = require('debug')('rdfstore');
 
+/**
+ * Verify if an object is a triple
+ * @param  {[type]}  value [description]
+ * @return {Boolean}       [description]
+ */
+function isTriple(value) {
+  return (value.subject && value.predicate && value.object || value.subject==='' && value.predicate==='' && value.object === '')?true:false;
+}
+
 module.exports = class RDFStore {
   constructor(options = { prefix: [] }) {
+    this.options = options;
     this._prefix = [];
     this._size = 0;
-    RdfStore.create((err, store) => {
-      this.store = store;
-      if(options.prefix.length > 0) options.prefix.forEach(p => this.addPrefix(p.name, p.value));
-      debug('RDF Store ready.');
-    });  
   }
-  
+  /**
+   * Create our triple store
+   * @param  {[type]}  [options=this.options] [description]
+   * @return {Promise}                        [description]
+   */
+  async create (options = this.options) {
+    return new Promise((resolve, reject) => {
+      this.options = options;
+      RdfStore.create((err, store) => {
+        if(err) reject(err);
+        this.store = store;
+        if(options.prefix.length > 0) options.prefix.forEach(p => this.addPrefix(p.name, p.value));
+        debug('RDF Store ready.');
+        resolve();
+      });
+    })
+  }
+
+  /**
+   * get all prefixes in our triple store
+   * @return {[type]} [description]
+   */
   get prefixes () {
     return this._prefix;
   }
 
+  /**
+   * add a prefix in our triple store
+   * @param {[type]} name  [description]
+   * @param {[type]} value [description]
+   */
   addPrefix(name, value) {
     if(!name || !value) throw new Error('A prefix need to have a name and a value such as {name: "dc", value: "http://..."}');
     this._prefix.push({name, value});
     this._setPrefix(name, value);
   }
 
+  /**
+   * @private
+   */
   _setPrefix(name, value) {
     this.store.setPrefix(name, value);
     debug('Prefix set: ', name, value);
   }
 
-  /**
-   * Get a value for a given key
-   * @param  {String} key a Triple Pattern <?s ?p ?o> such as "?x db:Person 'toto'"
-   * @return {Object}
-   */
-  async get(key) {
-    return new Promise((resolve, reject) => {
-      try {
-        const query = `SELECT * WHERE { ${key} . }`;
-        debug('Query:', query);
-        this.store.execute(query, function(err, results){
-          if(!err) {
-            resolve(results);
-          } else {
-            console.warn(err);
-            resolve(undefined);
-          }
-        });  
-      } catch (error) {
-        reject(error);
-      }
-    });
+  get freshTriple () {
+    return {
+      subject: "",
+      predicate: "",
+      object: ""
+    }
   }
 
   /**
-   * Set a value for a given key
-   * @param  {String} key generic triple pattern such as ?x :a "b" or the key equal the value
-   * @param {Array} value   Array of Triples to store for the given key correspond to the key such as [ "'a' :a "b"",  "'b' :a "b"", ... ] 
-   * @param {Boolean} return true if set or false otherwise
+   * Get all triples matching the given triple pattern
+   * @param  {[type]}  triple      [description]
+   * @param  {[type]}  [self=this] [description]
+   * @return {Promise}             [description]
    */
-  async set(key, value) {
-    function _set(self, key, value) {
-      return new Promise((resolve, reject) => {
-        if(!Array.isArray(value)) value = [value];
-        debug('=> Setting key: ', key, value);
-        const data = value.join(" . ");
-        try {
-          self.store.execute(`INSERT DATA { ${data} }`, function(err, results){
-            if(!err) {
-              resolve(true);
-            } else {
-              console.warn('An error occured during method set:', err);
-              resolve(false);
-            }
-          });  
-        } catch (error) {
-          console.warn('An error occured during method set:', error);
-          reject(error);
-        }
-      });
+  async get(triple, self = this) {
+    if(!isTriple(triple)) {
+      return Promise.reject(new Error("Need to be a triple: {subject: 'a' , predicate: 'x', object:'z' }"))
     }
+    return self.getFromTriplePattern(triple, self.store);
+  }
 
-    if(!await this.has(key)) {
+  /**
+   * Insert a triple in our store
+   * @param  {[type]}  key         [description]
+   * @param  {[type]}  value       [description]
+   * @param  {[type]}  [self=this] [description]
+   * @return {Promise}             [description]
+   */
+  async set(key, value, self = this) {
+    debug(key, value)
+    if(!value) value = key;
+    if(!isTriple(key) || !isTriple(value)) {
+      return Promise.reject(new Error("Need to be a triple: {subject: 'a' , predicate: 'x', object:'z' }"))
+    }
+    if(!await self.has(key, self)) {
       try {
-        const res = await _set(this, key, value);
-        debug(res);
-        if(res) {
-          this._size += value.length;
-          return Promise.resolve(true);
-        } else {
-          Promise.resolve(false);
-        }
+        const res = await self.insertFromTriplePattern(key, self.store);
+        self._size += 1;
+        return Promise.resolve(true);
       } catch (error) {
         return Promise.reject(error);
       }
-      
     } else {
       return Promise.resolve(false);
     }
   }
 
   /**
-   * Check if a key is defined in the cache,
-   * @param  {String}  key the key such ?x :a 'b'
-   * @return {Boolean}     true or false
+   * Check if a triple is in the cache
+   * @param  {[type]}  triple      [description]
+   * @param  {[type]}  [self=this] [description]
+   * @return {Promise}             [description]
    */
-  async has(key) {
-    return new Promise((resolve, reject) => {
-      const query = `ASK { ${key} }`;
-      debug('Query: ', query);
-      try {
-        this.store.execute(query, (err, results) => {
-          if(err) {
-            debug(err);
-            reject(err);
-          } else {
-            debug('Result of query: ', query, results)
-            resolve(results);
-          }
-        });  
-      } catch (error) {
-        console.warn('An error occured during method has:', error);
-        reject(error);
-      }
-    })
+  async has(triple, self = this) {
+    if(!isTriple(triple)) {
+      return Promise.reject(new Error("Need to be a triple: {subject: 'a' , predicate: 'x', object:'z' }"))
+    }
+    return self.askFromTriplePattern(triple, self.store);
   }
 
 
@@ -130,18 +127,18 @@ module.exports = class RDFStore {
    * Reset the cache to an empty cache
    * @return {Boolean} true if clear, false otherwise
    */
-  async clear() {
+  async clear(self = this) {
     return await new Promise((resolve, reject) => {
       try {
-        this.store.clear(() => {
+        self.store.clear(() => {
           if(err) {
             console.warn(err);
             resolve(false);
           } else {
-            this._size = 0;
+            self._size = 0;
             resolve(true);
           }
-        });  
+        });
       } catch (error) {
         reject(error);
       }
@@ -149,32 +146,20 @@ module.exports = class RDFStore {
   }
 
   /**
-   * Delete a given key from the cache
+   * Delete a given triple in the store
    * @param  {[type]} key
    * @return {Boolean} true if deleted, false otherwise
    */
-  async del(key) {
-    async function _del(key, value) {
-      return await new Promise((resolve, reject) => {
-        try {
-          this.store.execute(`${this.prefixes} DELETE DATA { ${value.join(' . ')} }`, function(err, results){
-            if(!err) {
-              resolve(true);
-            } else {
-              console.warn(err);
-              resolve(false);
-            }
-          });  
-        } catch (error) {
-          reject(error);
-        }
-      });
+  async del(triple, self = this) {
+    if(!isTriple(triple)) {
+      return Promise.reject(new Error("Need to be a triple: {subject: 'a' , predicate: 'x', object:'z' }"))
     }
-    if(await this.has(key)) {
+
+    if(await self.has(triple, self)) {
       try {
-        const res = await _del(key);
+        const res = await self.deleteFromTriplePattern(triple, self.store);
         if(res) {
-          this.size = this.size - value.length;
+          self._size = self._size - 1;
           return Promise.resolve(true);
         } else {
           return Promise.resolve(false);
@@ -191,7 +176,101 @@ module.exports = class RDFStore {
    * Get the size of the cache
    * @return {Number}
    */
-  size() {
-    return Promise.resolve(this_size);
+  async size(self = this) {
+    return self._size;
+  }
+
+  /**
+   * @private
+   * Get all matching triples from its representation by its triple pattern in the store
+   * @param  {[type]}  triple [description]
+   * @param  {[type]}  store  [description]
+   * @return {Promise}        [description]
+   */
+  async getFromTriplePattern(triple, store) {
+    return new Promise((resolve, reject) => {
+      try {
+        store.execute(`SELECT * WHERE { ${triple.subject} ${triple.predicate} ${triple.object} . }`, function(err, results){
+          if(err) reject(err);
+          debug('Getting: ', triple, 'Status: ', results)
+          resolve(results);
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  /**
+   * @private
+   * Ask if a triple is in the store
+   * @param  {[type]}  triple [description]
+   * @param  {[type]}  store  [description]
+   * @return {Promise}        [description]
+   */
+  async askFromTriplePattern(triple, store) {
+    return new Promise((resolve, reject) => {
+      try {
+        store.execute(`ASK { ${triple.subject} ${triple.predicate} ${triple.object} . }`, (err, results) => {
+          if(err) reject(err);
+          debug('Asking: ', triple, 'Status: ', results)
+          resolve(results);
+        });
+      } catch (error) {
+        reject(error);
+      }
+    })
+  }
+
+  /**
+   * @private
+   * delete a triple from the store
+   * @param  {[type]}  triple [description]
+   * @param  {[type]}  store  [description]
+   * @return {Promise}        [description]
+   */
+  async deleteFromTriplePattern(triple, store) {
+    return new Promise((resolve, reject) => {
+      try {
+        store.execute(`DELETE DATA { ${triple.subject} ${triple.predicate} ${triple.object} . }`, (err, results) => {
+          if(err) reject(err);
+          debug('Deleting: ', triple, 'Status: ', results)
+          resolve(results);
+        })
+      } catch (e) {
+          reject(e);
+      }
+    });
+  }
+
+  /**
+   * insert a triple in the store
+   * @param  {[type]}  triple [description]
+   * @param  {[type]}  store  [description]
+   * @return {Promise}        [description]
+   */
+  async insertFromTriplePattern(triple, store) {
+    return new Promise((resolve, reject) => {
+      store.execute(`INSERT DATA { ${triple.subject} ${triple.predicate} ${triple.object} . }`, (err, results) => {
+        if(err) reject(err);
+        debug('Inserting: ', triple, 'Status: ', results)
+        resolve(results);
+      })
+    });
+  }
+
+  /**
+   * Bonus: make any SPARQL 1.1 on the store
+   * @param  {[type]}  query [description]
+   * @return {Promise}       [description]
+   */
+  async query (query) {
+    return new Promise((resolve, reject) => {
+      store.execute(query, (err, results) => {
+        if(err) reject(err);
+        debug('Querying: ', query, 'Results: ', results)
+        resolve(results);
+      })
+    });
   }
 }

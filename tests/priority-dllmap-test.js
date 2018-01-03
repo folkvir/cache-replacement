@@ -10,7 +10,7 @@ const setm = (arr, queue) => {
 	});
 };
 
-describe('Priority Double Linked List with Map', function() {
+describe('PMDLL (PriorityMapDoubleLinkedList)', function() {
   describe('Creation of the list', function() {
     it('should return no error during the creation of the list', function() {
       let list = new PDLLMap();
