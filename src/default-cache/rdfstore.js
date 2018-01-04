@@ -4,6 +4,12 @@ const debug = require('debug')('rdfstore');
 
 /**
  * Verify if an object is a triple
+ * Eg: let triples = [
+   { subject: "<http://example/book1>", predicate: "<http://example.org/ns/price>", object: "42" },
+   { subject: "<http://example/book1>", predicate: "<http://purl.org/dc/elements/1.1/title>", object: "\"A new book\"" },
+   { subject: "<http://example/book1>", predicate: "<http://purl.org/dc/elements/1.1/creator>", object: "\"A.N.Other\"" }
+ ];
+ * triples.map(t => isTriple(t)) // return [true, true, true]
  * @param  {[type]}  value [description]
  * @return {Boolean}       [description]
  */
@@ -28,40 +34,16 @@ module.exports = class RDFStore {
       RdfStore.create((err, store) => {
         if(err) reject(err);
         this.store = store;
-        if(options.prefix.length > 0) options.prefix.forEach(p => this.addPrefix(p.name, p.value));
         debug('RDF Store ready.');
         resolve();
       });
     })
   }
-
+  
   /**
-   * get all prefixes in our triple store
+   * Return a fresh empty triple
    * @return {[type]} [description]
    */
-  get prefixes () {
-    return this._prefix;
-  }
-
-  /**
-   * add a prefix in our triple store
-   * @param {[type]} name  [description]
-   * @param {[type]} value [description]
-   */
-  addPrefix(name, value) {
-    if(!name || !value) throw new Error('A prefix need to have a name and a value such as {name: "dc", value: "http://..."}');
-    this._prefix.push({name, value});
-    this._setPrefix(name, value);
-  }
-
-  /**
-   * @private
-   */
-  _setPrefix(name, value) {
-    this.store.setPrefix(name, value);
-    debug('Prefix set: ', name, value);
-  }
-
   get freshTriple () {
     return {
       subject: "",

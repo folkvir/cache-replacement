@@ -1,12 +1,11 @@
 const assert = require('assert');
 const RdfStore = require('../src/default-cache/rdfstore.js');
 
-const prefixes = [{name: "dc:" , value: "<http://purl.org/dc/elements/1.1/>"}, {name: "ns:", value: "<http://example.org/ns#>"}];
-
-const triples = [
-  { subject: "<http://example/book1>", predicate: "ns:price", object: "42" },
-  { subject: "<http://example/book1>", predicate: "dc:title", object: "\"A new book\"" },
-  { subject: "<http://example/book1>", predicate: "dc:creator", object: "\"A.N.Other\"" } ];
+let triples = [
+  { subject: "<http://example/book1>", predicate: "<http://example.org/ns/price>", object: "42" },
+  { subject: "<http://example/book1>", predicate: "<http://purl.org/dc/elements/1.1/title>", object: "\"A new book\"" },
+  { subject: "<http://example/book1>", predicate: "<http://purl.org/dc/elements/1.1/creator>", object: "\"A.N.Other\"" }
+];
 
 describe('RDFSTORE AS A CACHE', function() {
   it('Create the RDF store', async function() {
