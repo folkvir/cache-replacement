@@ -1,21 +1,8 @@
 const AbstractCache = require('./abstract-cache');
 const RdfStore = require('rdfstore');
 const debug = require('debug')('rdfstore');
+const utils = require('../utils/n3parser.js');
 
-/**
- * Verify if an object is a triple
- * Eg: let triples = [
-   { subject: "<http://example/book1>", predicate: "<http://example.org/ns/price>", object: "42" },
-   { subject: "<http://example/book1>", predicate: "<http://purl.org/dc/elements/1.1/title>", object: "\"A new book\"" },
-   { subject: "<http://example/book1>", predicate: "<http://purl.org/dc/elements/1.1/creator>", object: "\"A.N.Other\"" }
- ];
- * triples.map(t => isTriple(t)) // return [true, true, true]
- * @param  {[type]}  value [description]
- * @return {Boolean}       [description]
- */
-function isTriple(value) {
-  return (value.subject && value.predicate && value.object || value.subject==='' && value.predicate==='' && value.object === '')?true:false;
-}
 
 module.exports = class RDFStore {
   constructor(options = { prefix: [] }) {
@@ -31,6 +18,7 @@ module.exports = class RDFStore {
   async create (options = this.options) {
     return new Promise((resolve, reject) => {
       this.options = options;
+      this.utils = utils;
       RdfStore.create((err, store) => {
         if(err) reject(err);
         this.store = store;
@@ -39,7 +27,7 @@ module.exports = class RDFStore {
       });
     })
   }
-  
+
   /**
    * Return a fresh empty triple
    * @return {[type]} [description]
@@ -59,7 +47,7 @@ module.exports = class RDFStore {
    * @return {Promise}             [description]
    */
   async get(triple, self = this) {
-    if(!isTriple(triple)) {
+    if(!utils.isTriple(triple)) {
       return Promise.reject(new Error("Need to be a triple: {subject: 'a' , predicate: 'x', object:'z' }"))
     }
     return self.getFromTriplePattern(triple, self.store);
@@ -73,9 +61,8 @@ module.exports = class RDFStore {
    * @return {Promise}             [description]
    */
   async set(key, value, self = this) {
-    debug(key, value)
     if(!value) value = key;
-    if(!isTriple(key) || !isTriple(value)) {
+    if(!utils.isTriple(key) || !utils.isTriple(value)) {
       return Promise.reject(new Error("Need to be a triple: {subject: 'a' , predicate: 'x', object:'z' }"))
     }
     if(!await self.has(key, self)) {
@@ -98,7 +85,7 @@ module.exports = class RDFStore {
    * @return {Promise}             [description]
    */
   async has(triple, self = this) {
-    if(!isTriple(triple)) {
+    if(!utils.isTriple(triple)) {
       return Promise.reject(new Error("Need to be a triple: {subject: 'a' , predicate: 'x', object:'z' }"))
     }
     return self.askFromTriplePattern(triple, self.store);
@@ -133,7 +120,7 @@ module.exports = class RDFStore {
    * @return {Boolean} true if deleted, false otherwise
    */
   async del(triple, self = this) {
-    if(!isTriple(triple)) {
+    if(!utils.isTriple(triple)) {
       return Promise.reject(new Error("Need to be a triple: {subject: 'a' , predicate: 'x', object:'z' }"))
     }
 

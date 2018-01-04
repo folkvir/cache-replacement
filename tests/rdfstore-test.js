@@ -1,13 +1,53 @@
 const assert = require('assert');
 const RdfStore = require('../src/default-cache/rdfstore.js');
+const utils = require('../src/utils/n3parser.js');;
+const fs = require('fs');
 
-let triples = [
-  { subject: "<http://example/book1>", predicate: "<http://example.org/ns/price>", object: "42" },
-  { subject: "<http://example/book1>", predicate: "<http://purl.org/dc/elements/1.1/title>", object: "\"A new book\"" },
-  { subject: "<http://example/book1>", predicate: "<http://purl.org/dc/elements/1.1/creator>", object: "\"A.N.Other\"" }
-];
+// !! RDF triples !!
+let triples = [];
+before(async function() {
+  /**
+   * As our data is a turtle file
+   * We have to firstly parse the data from the turtle representation to a triple representation
+   * Then for the RDFStore that uses RDF formats we just convert all value into their RDF Format,
+   * EG:
+   * @type {Array}
+   */
+  const file = fs.readFileSync(__dirname+'/data/data1.ttl', 'utf8');
+  triples = (await utils.parseString(file)).triples.map(t => utils.fromTripleToRDF(t));
+
+  console.log('Data:', triples);
+});
 
 describe('RDFSTORE AS A CACHE', function() {
+  it('Parsing a ttl string', async function (){
+    const parsed = await utils.parseString(
+      "@prefix ns: <http://example.org/ns#> . "
+       + triples[0].subject + " "
+       +triples[0].predicate + " "
+       + triples[0].object + " . ")
+    assert.equal(parsed.prefixes[0].name, 'ns')
+    assert.equal(parsed.prefixes[0].value, 'http://example.org/ns#')
+    assert.equal(parsed.triples[0].subject, 'http://example/book1')
+    assert.equal(parsed.triples[0].predicate, 'http://example.org/ns#price')
+    assert.equal(parsed.triples[0].object, '"42"^^http://www.w3.org/2001/XMLSchema#integer')
+  });
+  it('Use the parsed string in our Rdfstore', async function (){
+    const parsed = await utils.parseString(
+      "@prefix ns: <http://example.org/ns#> . "
+       + triples[0].subject + " "
+       +triples[0].predicate + " "
+       + triples[0].object + " . ")
+    assert.equal(parsed.prefixes[0].name, 'ns')
+    assert.equal(parsed.prefixes[0].value, 'http://example.org/ns#')
+    assert.equal(parsed.triples[0].subject, 'http://example/book1')
+    assert.equal(parsed.triples[0].predicate, 'http://example.org/ns#price')
+    assert.equal(parsed.triples[0].object, '"42"^^http://www.w3.org/2001/XMLSchema#integer')
+    parsed.triples.map(t => utils.fromTripleToRDF(t, parsed.prefixes))
+    assert.equal(parsed.triples[0].subject, '<http://example/book1>')
+    assert.equal(parsed.triples[0].predicate, '<http://example.org/ns#price>')
+    assert.equal(parsed.triples[0].object, '"42"^^<http://www.w3.org/2001/XMLSchema#integer>')
+  });
   it('Create the RDF store', async function() {
     let store = new RdfStore();
     await store.create();
