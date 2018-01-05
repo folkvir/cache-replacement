@@ -31,6 +31,8 @@
     "lodash.merge": "^4.6.0",
     "n3": "^0.11.2",
     "node-cache": "^4.1.1",
+    "rdf-data-model": "^1.0.0",
+    "rdf-string": "^1.0.1",
     "rdfstore": "^0.9.17"
   },
   "devDependencies": {
