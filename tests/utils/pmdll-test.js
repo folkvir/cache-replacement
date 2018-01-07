@@ -1,4 +1,4 @@
-const PDLLMap = require('../src/utils/pmdll.js');
+const PDLLMap = require('../../src/utils/pmdll.js');
 const assert = require('assert');
 
 const ENABLE_PRINT = (process.env.DEBUG==='pmdll')?true:false;

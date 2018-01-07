@@ -1,5 +1,5 @@
 const assert = require('assert');
-const utils = require('../src/utils/n3parser.js');
+const utils = require('../../src/utils/n3parser.js');
 const fs = require('fs');
 // !! RDF triples !!
 let triples = [];
@@ -11,7 +11,7 @@ before(async function() {
    * EG:
    * @type {Array}
    */
-  const file = fs.readFileSync(__dirname+'/data/data1.ttl', 'utf8');
+  const file = fs.readFileSync(__dirname+'/../data/data1.ttl', 'utf8');
   triples = (await utils.parseString(file)).triples.map(t => utils.fromTripleToRDF(t));
 
   console.log('Data:', triples);
