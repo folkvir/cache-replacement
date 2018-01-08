@@ -4,7 +4,7 @@
   "description": "Cache Replacement Policies tool",
   "main": "cache-replacement.js",
   "scripts": {
-    "test": "mocha ./tests/**/*-test.js"
+    "test": "mocha './tests/**/*-test.js'"
   },
   "repository": {
     "type": "git",
