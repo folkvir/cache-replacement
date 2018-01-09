@@ -1,6 +1,6 @@
-const assert = require('assert');
 const RdfStore = require('../../src/default-cache/rdfstore.js');
 const utils = require('../../src/utils/n3parser.js');;
+const assert = require('assert');
 const fs = require('fs');
 
 // !! RDF triples !!
@@ -121,6 +121,19 @@ describe('RDFSTORE AS A CACHE', function() {
     node.predicate = "?p";
     node.object = "?o";
     const get = await store.get(node); // spo query in our triple store
+    // get.triples.forEach(t => {
+    //   console.log(utils.fromRdfstoreTriple2Triple(t));
+    // });
     assert.equal(get.length, 3);
+
+    let node1 = store.freshTriple;
+    node1.subject = "?s"
+    node1.predicate = "<http://example.org/ns#price>";
+    node1.object = "?o";
+
+    let q = await store.get(node1);
+    // q.triples.forEach(t => {
+    //   console.log(utils.fromRdfstoreTriple2Triple(t));
+    // });
   });
 });

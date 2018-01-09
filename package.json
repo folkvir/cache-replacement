@@ -4,7 +4,7 @@
   "description": "Cache Replacement Policies tool",
   "main": "cache-replacement.js",
   "scripts": {
-    "test": "mocha './tests/**/*-test.js'"
+    "test": "mocha \"./tests/**/*-test.js\""
   },
   "repository": {
     "type": "git",
@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/folkvir/cache-replacement#readme",
   "dependencies": {
+    "asynciterator": "^1.1.0",
     "bloom-filters": "^0.5.1",
     "co": "^4.6.0",
     "deasync": "^0.1.12",

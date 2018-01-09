@@ -15,7 +15,6 @@ async function parseString(string) {
         prefixes: []
       };
       N3Parser.parse(ttl, function (error, tr, prefixes) {
-        // debug(tr)
         if (tr) {
           const parsedTriple = {};
           parsedTriple.subject = tr.subject;
@@ -83,6 +82,15 @@ function fromTripleToRDF(triple, prefix = []) {
   return triple;
 }
 
+function fromRdfstoreTriple2Triple (rdfstoretriple) {
+  if(!isTriple(rdfstoretriple)) throw new Error('need to be a triple. {subject, predicate, object}')
+  return {
+    subject: rdfstoretriple.subject.toNT(),
+    predicate: rdfstoretriple.predicate.toNT(),
+    object: rdfstoretriple.object.toNT()
+  }
+}
+
 /**
  * Verify if an object is a triple
  * Eg: let triples = [
@@ -118,5 +126,6 @@ module.exports = {
   parseString,
   isTriple,
   ttlTriple2Parsedtriple,
-  fromTripleToRDF
+  fromTripleToRDF,
+  fromRdfstoreTriple2Triple
 }

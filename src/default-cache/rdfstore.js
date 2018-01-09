@@ -23,7 +23,7 @@ module.exports = class RDFStore {
         if(err) reject(err);
         this.store = store;
         debug('RDF Store ready.');
-        resolve();
+        resolve(this.store);
       });
     })
   }
@@ -156,10 +156,11 @@ module.exports = class RDFStore {
    * @param  {[type]}  store  [description]
    * @return {Promise}        [description]
    */
-  async getFromTriplePattern(triple, store) {
+  async getFromTriplePattern(triple,  store) {
     return new Promise((resolve, reject) => {
       try {
-        store.execute(`SELECT * WHERE { ${triple.subject} ${triple.predicate} ${triple.object} . }`, function(err, results){
+        const query = `CONSTRUCT { ${triple.subject} ${triple.predicate} ${triple.object} . } WHERE { ${triple.subject} ${triple.predicate} ${triple.object} }`;
+        store.execute(query, function(err, results){
           if(err) reject(err);
           debug('Getting: ', triple, 'Status: ', results)
           resolve(results);
@@ -233,10 +234,11 @@ module.exports = class RDFStore {
    * @param  {[type]}  query [description]
    * @return {Promise}       [description]
    */
-  async query (query) {
+  async query (query, store = this.store) {
     return new Promise((resolve, reject) => {
       store.execute(query, (err, results) => {
         if(err) reject(err);
+        console.log('Querying: ', query, 'Results: ', results)
         debug('Querying: ', query, 'Results: ', results)
         resolve(results);
       })
