@@ -8,99 +8,58 @@ module.exports = class NodeCacheWrapper extends NodeCache{
   /**
    * Get a value for a given key
    * @param  {String} key
-   * @return {Promise<Object>}
+   * @return {Object}
    */
   get(key) {
-    return new Promise((resolve, reject) => {
-      try {
-        const get = super.get(key);
-        resolve(get);
-      } catch (error) {
-        reject(error);
-      }
-    });
+    return super.get(key);
   }
 
   /**
    * Set a value for a given key
    * @param  {String} key
    * @param {Object} value   [description]
-   * @param {Promise<Object>}
+   * @param {Object}
    */
   set(key, value) {
-    return new Promise((resolve, reject) => {
-      try {
-        const set = super.set(key, value);
-        resolve(set);
-      } catch (error) {
-        reject(error);
-      }
-    });
+    return super.set(key, value);
   }
 
   /**
    * Check if a key is defined in the cache
    * @param  {String}  key
-   * @return {c}     true or false
+   * @return {Boolean}     true or false
    */
   has(key) {
-    return new Promise((resolve, reject) => {
-      try {
-        this.get(key).then((result) => {
-          if(result) resolve(true);
-          resolve(false);
-        }).catch(e => {
-          reject(e);
-        });
-      } catch (error) {
-        reject(error);
-      }
-    });
+    return (this.get(key))?true:false;
   }
 
   /**
    * Reset the cache to an empty cache
-   * @return {Promise<Boolean>} true if clear, otherwise reject the promise
+   * @return {Boolean} true if cleared,
    */
   clear() {
-    return new Promise((resolve, reject) => {
-      try {
-        super.flushAll();
-        resolve(true)
-      } catch (e) {
-        reject(e);
-      }
-    });
+    try {
+      super.flushAll();
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   /**
    * Delete a given key from the cache
    * @param  {[type]} key
-   * @return {Promise<Boolean>} true if deleted, false otherwise
+   * @return {Boolean} true if deleted, false otherwise
    */
   del(key) {
-    return new Promise((resolve, reject) => {
-      try {
-        const del = super.del(key);
-        resolve(del);
-      } catch (error) {
-        reject(error);
-      }
-    });
+    return super.del(key);
   }
 
   /**
    * Get the size of the cache
-   * @return {Promise<Number>}
+   * @return {Number}
    */
   size() {
-    return new Promise((resolve, reject) => {
-      try {
-        const size = super.getStats().keys;
-        resolve(size);
-      } catch (error) {
-        reject(error);
-      }
-    });
+    return super.getStats().keys;
   }
 }

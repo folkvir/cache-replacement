@@ -21,34 +21,28 @@ module.exports = class FifoPolicy {
 
   policySet(cache) {
     cache._events.on('set', (key, value, result) => {
-      result.then((res) => {
-        if(res && !cache._variables.get('fifoqueue')._map.has(key)){
-          const max = cache._variables.get('options').max, size = cache._variables.get('fifoqueue').length;
-          if(size >= max) {
-            const oldKey = cache._variables.get('fifoqueue').shift();
-            if(oldKey !== key) cache.del(oldKey);
-          }
-          cache._variables.get('fifoqueue').push(key);
-        } else {
-          // noop, just set the variable in the cache
+      if(result && !cache._variables.get('fifoqueue')._map.has(key)){
+        const max = cache._variables.get('options').max, size = cache._variables.get('fifoqueue').length;
+        if(size >= max) {
+          const oldKey = cache._variables.get('fifoqueue').shift();
+          if(oldKey !== key) cache.del(oldKey);
         }
-      })
+        cache._variables.get('fifoqueue').push(key);
+      } else {
+        // noop, just set the variable in the cache
+      }
     });
   }
 
   policyDel(cache) {
     cache._events.on('del', (key, result) => {
-      result.then(res => {
-        res && cache._variables.get('fifoqueue').remove(cache._variables.get('fifoqueue').find(key));
-      })
+      result && cache._variables.get('fifoqueue').remove(cache._variables.get('fifoqueue').find(key));
     });
   }
 
   policyClear(cache) {
     cache._events.on('clear', (result) => {
-      result.then(r => {
-        res && cache._variables.get('fifoqueue').clear();
-      })
+      result && cache._variables.get('fifoqueue').clear();
     });
   }
 }

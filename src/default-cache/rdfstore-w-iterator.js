@@ -7,7 +7,8 @@ const Utils = require('../utils/n3parser.js');
 
 module.exports = class RdfStoreWithIterator {
   constructor(...options) {
-    this.store = new RdfStore();
+    this.options = options;
+    this.store = new RdfStore(...options);
     this.keys = new Map();
     this.events = new EventEmitter();
     this.SIGNAL_DOWNLOADED = 'downloaded';

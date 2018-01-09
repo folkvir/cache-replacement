@@ -22,7 +22,6 @@ describe('RDFSTORE AS A CACHE USING ITERATORS', function() {
     let cache = new RdfStore();
     let bi1 = new BI();
     let key1 = triple('?s', '?p', '?o');
-    console.log(key1.toString());
     cache.set(key1, bi1);
     bi1._push(triple('http://example/book1', 'ns:price', '"42"^^http://www.w3.org/2001/XMLSchema#integer'))
     bi1._push(triple('http://example/book2', 'ns:price', '"50"^^http://www.w3.org/2001/XMLSchema#integer'))
@@ -32,7 +31,6 @@ describe('RDFSTORE AS A CACHE USING ITERATORS', function() {
     let item = 0;
     bi2.on('data', (data) => {
       item++;
-      console.log(data);
     })
     bi2.on('end', () => {
       assert.equal(item, 2);
@@ -54,7 +52,6 @@ describe('RDFSTORE AS A CACHE USING ITERATORS', function() {
     let item = 0;
     bi2.on('data', (data) => {
       item++;
-      console.log(data);
     })
     bi2.on('end', () => {
       assert.equal(item, 2);

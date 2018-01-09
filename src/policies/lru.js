@@ -24,47 +24,39 @@ module.exports = class LRUPolicy {
 
   policyGet(cache) {
     cache._events.on('get', (key, result) => {
-      result.then((res) => {
-        if(res) {
-          const node = cache._variables.get('lruqueue').find(key);
-          cache._variables.get('lruqueue').bump(node);
-        }
-      });
+      if(result) {
+        const node = cache._variables.get('lruqueue').find(key);
+        cache._variables.get('lruqueue').bump(node);
+      }
     });
   }
 
   policySet(cache) {
     cache._events.on('set', (key, value, result) => {
-      result.then((res) => {
-        if(res && !cache._variables.get('lruqueue')._map.has(key)){
-          const max = cache._variables.get('options').max, size = cache._variables.get('lruqueue').length;
-          if(size >= max) {
-            // delete the first element in the queue and delete the element in the cache
-            const oldKey = cache._variables.get('lruqueue').shift();
-            if(oldKey !== key) cache.del(oldKey);
-          }
-          cache._variables.get('lruqueue').push(key);
-        } else {
-          const node = cache._variables.get('lruqueue').find(key);
-          cache._variables.get('lruqueue').bump(node);
+      if(result && !cache._variables.get('lruqueue')._map.has(key)){
+        const max = cache._variables.get('options').max, size = cache._variables.get('lruqueue').length;
+        if(size >= max) {
+          // delete the first element in the queue and delete the element in the cache
+          const oldKey = cache._variables.get('lruqueue').shift();
+          if(oldKey !== key) cache.del(oldKey);
         }
-      });
+        cache._variables.get('lruqueue').push(key);
+      } else {
+        const node = cache._variables.get('lruqueue').find(key);
+        cache._variables.get('lruqueue').bump(node);
+      }
     });
   }
 
   policyDel(cache) {
     cache._events.on('del', (key, result) => {
-      result.then((res) => {
-        res && cache._variables.get('lruqueue').remove(cache._variables.get('lruqueue').find(key));
-      });
+      result && cache._variables.get('lruqueue').remove(cache._variables.get('lruqueue').find(key));
     });
   }
 
   policyClear(cache) {
     cache._events.on('clear', (result) => {
-      result.then((res) => {
-        res && cache._variables.get('lruqueue').clear();
-      });
+      result && cache._variables.get('lruqueue').clear();
     });
   }
 }
