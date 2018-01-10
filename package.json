@@ -25,10 +25,6 @@
   "homepage": "https://github.com/folkvir/cache-replacement#readme",
   "dependencies": {
     "asynciterator": "^1.1.0",
-    "bloom-filters": "^0.5.1",
-    "co": "^4.6.0",
-    "deasync": "^0.1.12",
-    "deasync-promise": "^1.0.1",
     "debug": "^3.1.0",
     "fifo": "^2.3.0",
     "lodash.merge": "^4.6.0",
