@@ -11,7 +11,7 @@ let triple = (s, p, o) => {
       object: o,
       toString: function () {
         return this.subject + ' ' + this.predicate + ' ' + this.object + ' . ';
-      }
+      },
     };
 }
 
@@ -21,7 +21,7 @@ describe('RDFSTORE AS A CACHE USING ITERATORS', function() {
   it('should return no error during setting an iterator in the cache and inserting items in the iterator still opened', function (done){
     let cache = new RdfStore();
     let bi1 = new BI();
-    let key1 = triple('?s', '?p', '?o');
+    let key1 = JSON.stringify(triple('?s', '?p', '?o'));
     cache.set(key1, bi1);
     bi1._push(triple('http://example/book1', 'ns:price', '"42"^^http://www.w3.org/2001/XMLSchema#integer'))
     bi1._push(triple('http://example/book2', 'ns:price', '"50"^^http://www.w3.org/2001/XMLSchema#integer'))
@@ -40,7 +40,7 @@ describe('RDFSTORE AS A CACHE USING ITERATORS', function() {
   it('should return no error during setting an iterator in the cache after inserted items', async function (){
     let cache = new RdfStore();
     let bi1 = new BI();
-    let key1 = triple('?s', '?p', '?o');
+    let key1 = JSON.stringify(triple('?s', '?p', '?o'));
     cache.set(key1, bi1);
     bi1._push(triple('http://example/book1', 'ns:price', '"42"^^http://www.w3.org/2001/XMLSchema#integer'))
     bi1._push(triple('http://example/book2', 'ns:price', '"50"^^http://www.w3.org/2001/XMLSchema#integer'))

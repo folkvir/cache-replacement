@@ -1,48 +1,37 @@
-const FIFOQueue = require('../utils/map-double-linked-list.js');
+const FIFOQueue = require('../utils/map-double-linked-list');
+const NodeCache = require('../default-cache/node-cache');
 const debug = require('debug')('fifo');
 
-module.exports = class FifoPolicy {
-  constructor(options) {
-    this._methods = ['set', 'del', 'clear'];
-  }
-  get methods () {
-    return this._methods;
-  }
-
-  apply(cache) {
-    // initialize variable for ou policy
-    const options = cache._options[0] === undefined && { max: Infinity } || cache._options[0];
-    cache._variables.set('options', options)
-    cache._variables.set('fifoqueue', new FIFOQueue())
-    this.policySet(cache);
-    this.policyDel(cache);
-    this.policyClear(cache);
+module.exports = class FIFOPolicy extends NodeCache{
+  constructor(options = {max: Infinity}) {
+    super(options);
+    this.keys = new FIFOQueue();
+    this.max = options.max
   }
 
-  policySet(cache) {
-    cache._events.on('set', (key, value, result) => {
-      if(result && !cache._variables.get('fifoqueue')._map.has(key)){
-        const max = cache._variables.get('options').max, size = cache._variables.get('fifoqueue').length;
-        if(size >= max) {
-          const oldKey = cache._variables.get('fifoqueue').shift();
-          if(oldKey !== key) cache.del(oldKey);
-        }
-        cache._variables.get('fifoqueue').push(key);
-      } else {
-        // noop, just set the variable in the cache
+  set(key, value) {
+    const res = super.set(key, value);
+    if(res && !this.keys._map.has(key)){
+      const max = this.max, size = this.keys.length;
+      if(size >= max) {
+        const oldKey = this.keys.shift();
+        if(oldKey !== key) this.del(oldKey);
       }
-    });
+      this.keys.push(key);
+    } else {
+      // noop, just set the variable in the cache
+    }
+    return res;
   }
 
-  policyDel(cache) {
-    cache._events.on('del', (key, result) => {
-      result && cache._variables.get('fifoqueue').remove(cache._variables.get('fifoqueue').find(key));
-    });
+  clear() {
+    this.keys.clear()
+    return super.clear();
   }
 
-  policyClear(cache) {
-    cache._events.on('clear', (result) => {
-      result && cache._variables.get('fifoqueue').clear();
-    });
+  del(key) {
+    const del = super.del(key);
+    del && this.keys.remove(this.keys.find(key));
+    return del;
   }
 }

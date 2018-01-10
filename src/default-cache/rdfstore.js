@@ -1,4 +1,3 @@
-const AbstractCache = require('./abstract-cache');
 const RdfStore = require('rdfstore');
 const debug = require('debug')('rdfstore');
 const utils = require('../utils/n3parser.js');
@@ -221,11 +220,15 @@ module.exports = class RDFStore {
    */
   async insertFromTriplePattern(triple, store) {
     return new Promise((resolve, reject) => {
-      store.execute(`INSERT DATA { ${triple.subject} ${triple.predicate} ${triple.object} . }`, (err, results) => {
-        if(err) reject(err);
-        debug('Inserting: ', triple, 'Status: ', results)
-        resolve(results);
-      })
+      try {
+        store.execute(`INSERT DATA { ${triple.subject} ${triple.predicate} ${triple.object} . }`, (err, results) => {
+          if(err) reject(err);
+          debug('Inserting: ', triple, 'Status: ', results)
+          resolve(results);
+        })
+      } catch (e) {
+        reject(e);
+      }
     });
   }
 
@@ -236,12 +239,16 @@ module.exports = class RDFStore {
    */
   async query (query, store = this.store) {
     return new Promise((resolve, reject) => {
-      store.execute(query, (err, results) => {
-        if(err) reject(err);
-        console.log('Querying: ', query, 'Results: ', results)
-        debug('Querying: ', query, 'Results: ', results)
-        resolve(results);
-      })
+      try {
+        store.execute(query, (err, results) => {
+          if(err) reject(err);
+          console.log('Querying: ', query, 'Results: ', results)
+          debug('Querying: ', query, 'Results: ', results)
+          resolve(results);
+        })
+      } catch (e) {
+        reject(e);
+      }
     });
   }
 }

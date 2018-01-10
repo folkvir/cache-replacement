@@ -1,59 +1,43 @@
-const debug = require('debug')('lfu');
 const LFUQueue = require('../utils/pmdll.js');
+const NodeCache = require('../default-cache/node-cache');
+const debug = require('debug')('fifo');
 
-
-module.exports = class LFUPolicy {
-  constructor(options) {
-    this._methods = ['set', 'del', 'clear', 'get'];
-  }
-  get methods () {
-    return this._methods;
-  }
-
-  apply(cache) {
-    // initialize variable for ou policy
-    const options = cache._options[0] === undefined && { max: Infinity } || cache._options[0];
-    cache._variables.set('options', options)
-    cache._variables.set('lfuqueue', new LFUQueue())
-    this.policyGet(cache);
-    this.policySet(cache);
-    this.policyDel(cache);
-    this.policyClear(cache);
+module.exports = class FIFOPolicy extends NodeCache{
+  constructor(options = {max: Infinity}) {
+    super(options);
+    this.keys = new LFUQueue();
+    this.max = options.max
   }
 
-  policyGet(cache) {
-    cache._events.on('get', (key, result) => {
 
-      result && cache._variables.get('lfuqueue').set(key);
 
-    });
+  get(key) {
+    const res = super.get(key);
+    res && this.keys.set(key);
+    return res;
   }
 
-  policySet(cache) {
-    cache._events.on('set', (key, value, result) => {
-      if(result && !cache._variables.get('lfuqueue').has(key)){
-        const max = cache._variables.get('options').max, size = cache._variables.get('lfuqueue').length;
-        if(size >= max) {
-            // delete the first element in the queue and delete the element in the cache
-            const leastFrequent = cache._variables.get('lfuqueue').leastFrequent;
-            if(leastFrequent != key) cache.del(leastFrequent)
-        }
-        cache._variables.get('lfuqueue').set(key);
-      } else {
-        cache._variables.get('lfuqueue').set(key);
+  set(key, value) {
+    const res = super.set(key, value);
+    if(res && !this.keys.has(key)){
+      const max = this.max, size = this.keys.length;
+      if(size >= max) {
+        const leastFrequent = this.keys.leastFrequent;
+        if(leastFrequent !== key) this.del(leastFrequent);
       }
-    });
+    }
+    this.keys.set(key);
+    return res;
   }
 
-  policyDel(cache) {
-    cache._events.on('del', (key, result) => {
-      result && cache._variables.get('lfuqueue').delete(key);
-    });
+  clear() {
+    this.keys.clear()
+    return super.clear();
   }
 
-  policyClear(cache) {
-    cache._events.on('clear', (result) => {
-        result && cache._variables.get('lfuqueue').clear();
-    });
+  del(key) {
+    const del = super.del(key);
+    del && this.keys.delete(key);
+    return del;
   }
 }

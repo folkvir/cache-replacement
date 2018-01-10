@@ -1,51 +1,37 @@
-const LIFOQueue = require('../utils/map-double-linked-list.js');
+const FIFOQueue = require('../utils/map-double-linked-list');
+const NodeCache = require('../default-cache/node-cache');
 const debug = require('debug')('lifo');
 
-
-module.exports = class LIFOPolicy {
-  constructor(options) {
-    this._methods = ['set', 'del', 'clear'];
-  }
-  get methods () {
-    return this._methods;
+module.exports = class LIFOPolicy extends NodeCache{
+  constructor(options = {max: Infinity}) {
+    super(options);
+    this.keys = new FIFOQueue();
+    this.max = options.max
   }
 
-  apply(cache) {
-    // initialize variable for ou policy
-    const options = cache._options[0] === undefined && { max: Infinity } || cache._options[0];
-    cache._variables.set('options', options)
-    cache._variables.set('lifoqueue', new LIFOQueue())
-    this.policySet(cache);
-    this.policyDel(cache);
-    this.policyClear(cache);
+  set(key, value) {
+    const res = super.set(key, value);
+    if(res && !this.keys._map.has(key)){
+      const max = this.max, size = this.keys.length;
+      if(size >= max) {
+        const oldKey = this.keys.pop();
+        if(oldKey !== key) this.del(oldKey);
+      }
+      this.keys.push(key);
+    } else {
+      // noop, just set the variable in the cache
+    }
+    return res;
   }
 
-  policySet(cache) {
-    cache._events.on('set', (key, value, result) => {
-        const has = cache._variables.get('lifoqueue')._map.has(key);
-        if(result && !cache._variables.get('lifoqueue')._map.has(key)){
-          const max = cache._variables.get('options').max, size = cache._variables.get('lifoqueue').length;
-          if(size >= max) {
-            // delete the first element in the queue and delete the element in the cache
-            const oldKey = cache._variables.get('lifoqueue').pop();
-            if(oldKey !== key) cache.del(oldKey);
-          }
-          cache._variables.get('lifoqueue').push(key);
-        } else {
-          // noop, just set the variable in the cache
-        }
-    });
+  clear() {
+    this.keys.clear()
+    return super.clear();
   }
 
-  policyDel(cache) {
-    cache._events.on('del', (key, result) => {
-      result && cache._variables.get('lifoqueue').remove(cache._variables.get('lifoqueue').find(key));
-    });
-  }
-
-  policyClear(cache) {
-    cache._events.on('clear', (result) => {
-      result && cache._variables.get('lifoqueue').clear();
-    });
+  del(key) {
+    const del = super.del(key);
+    del && this.keys.remove(this.keys.find(key));
+    return del;
   }
 }

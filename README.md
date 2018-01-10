@@ -2,8 +2,7 @@
 
 ![Keep Calm and Clear Cache](./src/utils/images/kccc.png)
 
-This is a tool to create your own cache replacement policies.
-We wrap the cache (be carefull to fit the API) you want to use and enable a way to custom the replacement policy that fits your need.
+Do you want a specific in-memory cache ? With a specific replacement policy ? This is the right place.
 
 By default we implemented some replacement policies:
 * **FIFO**: First In First Out, the first value cached is replaced. (O(1))
@@ -15,46 +14,24 @@ By default we implemented some replacement policies:
 * **RR**: Random Replacement in the cache;
 
 
-__Be aware, I do not intend to developp perfect cache replacement policies here
-and this tool is not adapt if you want to use a specific cache replacement policy.
-Because a cache replacement policy can be completely developp with more adapted specific data structures accorded to their internal policy replacement. 
-Here we develop ours with a Double Linked List coupled to a Map for O(1) access. For a frequency usage such as LFU or MFU we use the same data structure as before but the Double linked List is modified to be a Double Priority Linked List.__ 
-
 ## Install
 `npm install --save cache-replacement`
 
 ## Usage
 
-At least you need to install a cache such as [node-cache](https://www.npmjs.com/package/node-cache) `npm install --save node-cache` or use our default cache that is a wrapper of node-cache fitting our API.
-
 ```js
 
-const CacheReplacementPolicy = require('cache-replacement').main;
-const Cache = require('cache-replacement').cache; // or require('node-cache') and wrapp it to fit our API
+const CacheReplacementPolicy = require('cache-replacement');
 
-// Create the main class
-let cacheReplacement = new CacheReplacementPolicy();
+// want a LRU or a LFU ?
+const lru = new CacheReplacementPolicy.lru();
+const lfu = new CacheReplacementPolicy.lfu();
 
-// wrap your cache
-let cache = cacheReplacement.createCache(Cache, {max: 1});
-
-// set the policy for the specified cache
-cacheReplacement.setPolicy('fifo', cache)
-
-const r = cache.set('titi', 42);
-const r1 = cache.set('toto', 43);
-const r2 = cache.get('titi')
-const r3 = cache.get('toto')
-
-assert.deepEqual(r2, undefined)
-assert.deepEqual(r3, 43)
-assert.deepEqual(cache.size(), 1);
-
+// Then use it like this, we extends all our cache from node-cache
 ```
 
-## Create your own Policy
+## API
 
-First of all, respect the below API for your cache:
 
 ```js
 class Cache {
@@ -112,138 +89,6 @@ class Cache {
   }
 }
 ```
-
-Then create your own policy, for example the FIFO policy is implemented like this:
-
-```js
-const FIFOQueue = require('fifo');
-const debug = require('debug')('fifo');
-
-/**
- * This policy act as a FIFO queue, if a new element is added to the cache and the cache is full then the first element added is deleted.
- * See https://en.wikipedia.org/wiki/Cache_replacement_policies#First_In_First_Out_(FIFO)
- * => All policy events are emitted after the execution of the cache function
- */
-module.exports = class FifoPolicy {
-  constructor(options) {
-    this._methods = ['set', 'del', 'clear'];
-  }
-  get methods () {
-    return this._methods;
-  }
-
-  apply(cache) {
-    // initialize variable for ou policy
-    const options = cache._options[0] === undefined && { max: Infinity } || cache._options[0];
-    cache._variables.set('options', options)
-    cache._variables.set('fifoqueue', new FIFOQueue())
-    this.policySet(cache);
-    this.policyDel(cache);
-    this.policyClear(cache);
-  }
-
-  policySet(cache) {
-    cache._events.on('set', (key, value, result) => {
-      debug('Calling method set with: ', key, value, result, "... Cache Options: ", cache._variables.get('options'));
-      if(result && cache.has(key)){
-        const max = cache._variables.get('options').max, size = cache._variables.get('fifoqueue').length;
-        if(size >= max) {
-          debug('Deleting the first key because max cache length');
-          // delete the first element in the queue and delete the element in the cache
-
-          const oldKey = cache._variables.get('fifoqueue').shift();
-
-          if(oldKey !== key) cache.del(oldKey);
-        }
-        debug('Adding the key to the fifo queue');
-        cache._variables.get('fifoqueue').push(key);
-        debug(cache._variables.get('fifoqueue'));
-      } else {
-        // noop, just set the variable in the cache
-        debug('Simple behavior');
-      }
-      debug('fifoqueue size: ', cache._variables.get('fifoqueue').length, ' IsInCache: ', cache.has(key))
-    });
-  }
-
-  policyDel(cache) {
-    cache._events.on('del', (key, result) => {
-      debug('Calling method del with: ', key, result, "...");
-      if(result && !cache.has(key)) {
-        cache._variables.get('fifoqueue').bump(key);
-        cache._variables.get('fifoqueue').pop();
-      } else if(result && cache.has(key)){
-        cache._variables.get('fifoqueue').bump(key);
-        cache._variables.get('fifoqueue').pop();
-        cache.del(key);
-      }
-    });
-  }
-
-  policyClear(cache) {
-    cache._events.on('clear', (result) => {
-      debug('Calling method clear with: ', result, "...");
-      cache._variables.get('fifoqueue').clear();
-    });
-  }
-}
-```
-
-At least you need to define:
-* (mandatory) The array of methods representing the methods on which you will listening on events
-* (mandatory) a getter to it
-* (mandatory) the apply method
-  * parameter: cache
-
-```js
-module.exports = class FifoPolicy {
-  constructor(options) {
-    this._methods = ['set', 'del', 'clear'];
-  }
-  get methods () {
-    return this._methods;
-  }
-
-  apply(cache) {
-    // implement here your own policy
-  }
-};
-```
-
-When we wrap the cache with the method createCache we add some properties in the object such as:
-* \_events : an event emitter
-  * when you call a method such as get/set/clear/... and event is emitted on the same name 'get', 'set', 'clear'/ etc, after the execution of the cache's function.
-* \_variables : is a Map where you can store variables used for your replacement policy such as frequency, size, etc.
-
-For example if you want to create a policy that duplicates all value with a prefixed key you have to listen on the event 'set' for duplicating all values and 'del' for removing all duplicated values (1 delation = 2 delations).
-
-Here is the code
-```js
-module.exports = class FifoPolicy {
-  constructor(options) {
-    this._methods = ['set', 'del', 'clear'];
-  }
-  get methods () {
-    return this._methods;
-  }
-
-  apply(cache) {
-    // implement here your own policy
-    cache._events.on('set', (key, value, result) => {
-      // add another entry in the cache with our prefix
-      if(result) cache.set('my-awesome-key'+key, value);
-    })
-    cache._events.on('del', (key, result) => {
-      // delete the prefixed entry according to its key
-      if(result && !key.includes('my-awesome-key')) cache.del('my-awesome-key'+key);
-    })
-  }
-};
-```
-
-If you want to store variables use this inside apply method: `cache._variables.set('variableName', valueName)`
-
-** Enjoy our lib ! **
 
 ## Test our library
 ```bash
