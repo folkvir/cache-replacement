@@ -11,6 +11,15 @@ module.exports = class LRUPolicy extends NodeCache{
     this.max = options.max
   }
 
+  get(key) {
+    const res = super.get(key);
+    if(res) {
+      const node = this.keys.find(key);
+      this.keys.bump(node);
+    }
+    return res;
+  }
+
   set(key, value) {
     const res = super.set(key, value);
     if(res && !this.keys._map.has(key)){
