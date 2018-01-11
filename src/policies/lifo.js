@@ -1,11 +1,11 @@
-const FIFOQueue = require('../utils/map-double-linked-list');
-const NodeCache = require('../default-cache/node-cache');
+const LIFOQueue = require('../utils/map-double-linked-list');
+const NodeCache = require('../default-cache/memory-cache');
 const debug = require('debug')('lifo');
 
 module.exports = class LIFOPolicy extends NodeCache{
   constructor(options = {max: Infinity}) {
     super(options);
-    this.keys = new FIFOQueue();
+    this.keys = new LIFOQueue();
     this.max = options.max
   }
 

@@ -5,7 +5,7 @@ const ENABLE_PRINT = false;
 
 const print = (cache) => {
   if(ENABLE_PRINT) {
-    console.log('Print the lfu queue: ');
+    console.log('Print the lfu queue: ', `, least: ${cache.keys.leastFrequent} most:${cache.keys.mostFrequent}`);
     cache.keys.forEach(function(val, node) {
       console.log(`** ${val}`);
     });
@@ -63,16 +63,15 @@ describe('Testing the LFU policy', function() {
     assert.deepEqual( cache.size(), 2);
     assert.deepEqual(cache.keys.length, 2);
   });
-  it('should correctly delete the least frequently used element [method has] (cache size =2)',  function() {
+  it('should not increase frequency with method has (cache size =2)',  function() {
     let cache = new Cache({max:2});
     const r =  cache.set('titi', 42);
     const r1 =  cache.set('toto', 43);
-    assert.equal(cache.keys.leastFrequent, 'titi', 'least frequent titi')
+    print(cache)
+    assert.equal(cache.keys.leastFrequent, 'titi', 'least frequent toto')
     const r2 =  cache.has('titi');
-    assert.equal(cache.keys.leastFrequent, 'toto', 'least frequent toto')
-    const r3 =  cache.set('tata', 44);
-    assert.equal(cache.keys.leastFrequent, 'tata', 'least frequent tata')
-    assert.equal(cache.keys.mostFrequent, 'titi' , 'most frequent titi')
+    print(cache)
+    assert.equal(cache.keys.leastFrequent, 'titi', 'least frequent toto')
     assert.deepEqual( cache.size(), 2);
     assert.deepEqual(cache.keys.length, 2);
   });

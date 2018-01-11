@@ -1,8 +1,10 @@
-const NodeCache = require('node-cache');
+const NodeCache = require('memory-cache').Cache;
+const debug = require('debug')('memorycache');
 
-module.exports = class NodeCacheWrapper extends NodeCache{
-  constructor(...options) {
-    super(...options);
+module.exports = class NodeCacheWrapper {
+  constructor(options) {
+    this.memorycache = new NodeCache();
+    // this.memorycache.debug(true);
   }
 
   /**
@@ -11,7 +13,8 @@ module.exports = class NodeCacheWrapper extends NodeCache{
    * @return {Object}
    */
   get(key) {
-    return super.get(key);
+    debug('Getting key: ', key);
+    return this.memorycache.get(key);
   }
 
   /**
@@ -21,7 +24,13 @@ module.exports = class NodeCacheWrapper extends NodeCache{
    * @param {Object}
    */
   set(key, value) {
-    return super.set(key, value);
+    debug('Setting key: ', key);
+    try {
+      this.memorycache.put(key, value);
+      return true;
+    } catch (e) {
+      return e;
+    }
   }
 
   /**
@@ -30,7 +39,8 @@ module.exports = class NodeCacheWrapper extends NodeCache{
    * @return {Boolean}     true or false
    */
   has(key) {
-    return (this.get(key))?true:false;
+    debug('Checking key: ', key);
+    return (this.memorycache.get(key))?true:false;
   }
 
   /**
@@ -38,8 +48,9 @@ module.exports = class NodeCacheWrapper extends NodeCache{
    * @return {Boolean} true if cleared,
    */
   clear() {
+    debug('Clearing cache...');
     try {
-      super.flushAll();
+      this.memorycache.clear();
       return true;
     } catch (e) {
       return false;
@@ -52,7 +63,8 @@ module.exports = class NodeCacheWrapper extends NodeCache{
    * @return {Boolean} true if deleted, false otherwise
    */
   del(key) {
-    return super.del(key);
+    debug('Deleting key: ', key);
+    return this.memorycache.del(key);
   }
 
   /**
@@ -60,6 +72,6 @@ module.exports = class NodeCacheWrapper extends NodeCache{
    * @return {Number}
    */
   size() {
-    return super.getStats().keys;
+    return this.memorycache.size();
   }
 }

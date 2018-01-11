@@ -56,13 +56,13 @@ describe('Testing the MRU policy', function() {
     assert.deepEqual(r4, undefined);
     assert.deepEqual( cache.size(), 2);
   });
-  it('should correctly delete the most recently used element [method has] (cache size =2)',  function() {
+  it('should not increase frequency with method has (cache size =2)',  function() {
     let cache = new Cache({max:2});
     const r =  cache.set('titi', 42);
     const r1 =  cache.set('toto', 43);
     const r2 =  cache.has('titi');
     const r3 =  cache.set('tata', 44);
-    const r4 =  cache.get('titi');
+    const r4 =  cache.get('toto');
     assert.deepEqual(r2, true);
     assert.deepEqual(r4, undefined);
     assert.deepEqual( cache.size(), 2);

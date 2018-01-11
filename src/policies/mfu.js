@@ -1,69 +1,41 @@
+const MFUQueue = require('../utils/pmdll.js');
+const NodeCache = require('../default-cache/memory-cache');
 const debug = require('debug')('mfu');
-const mfuqueue = require('../utils/pmdll.js');
 
-module.exports = class MFUPolicy {
-  constructor(options) {
-    this._methods = ['set', 'del', 'clear', 'get'];
-  }
-  get methods () {
-    return this._methods;
+module.exports = class MFUPolicy extends NodeCache{
+  constructor(options = {max: Infinity}) {
+    super(options);
+    this.keys = new MFUQueue();
+    this.max = options.max
   }
 
-  apply(cache) {
-    // initialize variable for ou policy
-    const options = cache._options[0] === undefined && { max: Infinity } || cache._options[0];
-    cache._variables.set('options', options)
-    cache._variables.set('mfuqueue', new mfuqueue())
-    this.policyGet(cache);
-    this.policySet(cache);
-    this.policyDel(cache);
-    this.policyClear(cache);
+  get(key) {
+    const res = super.get(key);
+    res && this.keys.set(key);
+    return res;
   }
 
-  policyGet(cache) {
-    cache._events.on('get', (key, result) => {
-        debug('Calling method Get with: ', key, result, "... Cache Options: ", cache._variables.get('options'));
-        debug('Result of getting key:', key, result);
-        result && cache._variables.get('mfuqueue').set(key);
-    });
-  }
-
-  policySet(cache) {
-    cache._events.on('set', (key, value, result) => {
-      debug('Calling method set with: ', key, value, result, "... Cache Options: ", cache._variables.get('options'));
-      if(result && !cache._variables.get('mfuqueue').has(key)){
-        const max = cache._variables.get('options').max, size = cache._variables.get('mfuqueue').length;
-        debug('mfuqueue size before adding the key : ', size, ' max size: ', max);
-        if(size >= max) {
-            debug('Deleting the first key because max cache length and least recent key is always the first element');
-            // delete the first element in the queue and delete the element in the cache
-
-            const mostFrequent = cache._variables.get('mfuqueue').mostFrequent;
-            if(mostFrequent != key) cache.del(mostFrequent);
-        }
-        debug('Adding the key to the lru queue');
-        cache._variables.get('mfuqueue').set(key);
-      } else {
-        debug('Bump the key at the end of the mfuqueue');
-        cache._variables.get('mfuqueue').set(key);
+  set(key, value) {
+    const res = super.set(key, value);
+    if(res && !this.keys.has(key)){
+      const max = this.max, size = this.keys.length;
+      if(size >= max) {
+        const mostFrequent = this.keys.mostFrequent;
+        if(mostFrequent != key) this.del(mostFrequent);
       }
-      debug('mfuqueue size after added the key: ', cache._variables.get('mfuqueue').length);
-    });
+    }
+    this.keys.set(key);
+    return res;
   }
 
-  policyDel(cache) {
-    cache._events.on('del', (key, result) => {
-      debug('Calling method del with: ', key, result, "...");
-      if(result) {
-        cache._variables.get('mfuqueue').delete(key);
-      }
-    });
+  clear() {
+    this.keys.clear()
+    return super.clear();
   }
 
-  policyClear(cache) {
-    cache._events.on('clear', (result) => {
-      debug('Calling method clear with: ', result, "...");
-      result && cache._variables.get('mfuqueue').clear();
-    });
+  del(key) {
+    const del = super.del(key);
+    del && this.keys.delete(key);
+    return del;
   }
 }
