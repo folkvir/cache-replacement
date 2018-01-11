@@ -1,24 +1,18 @@
-const RdfStore = require('./rdfstore.js');
+const RdfStore = require('./triplestore.js');
 const BufferedIterator = require('asynciterator').BufferedIterator;
 const TransformIt = require('asynciterator').TransformIterator
 const EventEmitter = require('events');
-const debug = require('debug')('rdfstoreiterator');
+const debug = require('debug')('triplestoreiterator');
 const Utils = require('../utils/n3parser.js');
 
 module.exports = class RdfStoreWithIterator {
-  constructor(...options) {
+  constructor(options = {}) {
     this.options = options;
-    this.store = new RdfStore(...options);
+    this.store = new TripleStore();
     this.keys = new Map();
-
     this.events = new EventEmitter();
     this.SIGNAL_DOWNLOADED = 'downloaded';
     this.SIGNAL_INSERTED = 'inserted';
-    this.store.create().then(() => {
-      this.events.emit('ready');
-    }).catch(e => {
-      throw e
-    });
   }
 
   /**
@@ -47,7 +41,7 @@ module.exports = class RdfStoreWithIterator {
   }
 
   get size () {
-    return this.keys.size;
+    return this.store.size;
   }
 
   set(pattern, iterator) {
@@ -61,23 +55,20 @@ module.exports = class RdfStoreWithIterator {
       if(!this.keys.has(stringKey)) this.keys.set(stringKey, this._newKey(iterator));
       const dataIterator = iterator.clone();
       dataIterator.on('data', (item) => {
-        const itemRdf = Utils.fromTripleToRDF(item);
         debug('Pending Iterator: ', item.toString());
 
         if(!Utils.isTriple(item)) {
           dataIterator.emit('error', new Error("Need to be a triple: {subject: 'a' , predicate: 'x', object:'z' } instead of: "+ item.toString()))
         }
-        this.store.set(itemRdf).then((inserted) => {
-          if(inserted) {
-            debug('Pending Iterator: inserted item.');
-            const k = this.keys.get(stringKey);
-            k.exists = true;
-            k.events.emit(this.SIGNAL_INSERTED, item);
-            k.length++;
-          }
-        }).catch(e => {
-          dataIterator.emit('error', new Error("An error occured during the insertion of the item", e))
-        })
+
+        const inserted = this.store.set(item);
+        if(inserted) {
+          debug('Pending Iterator: inserted item.');
+          const k = this.keys.get(stringKey);
+          k.exists = true;
+          k.events.emit(this.SIGNAL_INSERTED, item);
+          k.length++;
+        }
       });
       dataIterator.on('end', (item) => {
         debug('Pending Iterator: closed and deleted');
@@ -114,25 +105,19 @@ module.exports = class RdfStoreWithIterator {
       debug('Reading the iterator from rdfstore...');
       const bi = new BufferedIterator();
       try {
-        console.log(k.properties);
         bi.setProperties(k.properties);
       } catch (e) {
         throw e;
       }
       const self = this;
       bi._read = function (count, done) {
-        self.store.get(pattern).then((resp) => {
-          console.log(resp);
-          if(resp) {
-            resp.triples.forEach(t => this._push(Utils.fromRdfstoreTriple2Triple(t)));
-            this.close();
-          }
-          done();
-        }).catch(e => {
-          bi.emit('error', new Error("An error occured during the insertion of the item for the pattern " + stringKey, e))
+
+        const resp = self.store.get(pattern)
+        if(resp) {
+          resp.triples.forEach(t => this._push(Utils.fromRdfstoreTriple2Triple(t)));
           this.close();
-          done();
-        });
+        }
+        done();
       };
       output.source = bi;
     }
@@ -140,22 +125,12 @@ module.exports = class RdfStoreWithIterator {
     return output;
   }
 
-  del(pattern, callback) {
-    const stringKey = pattern;
-    pattern = JSON.parse(pattern);
-    if(!this.has(stringKey)) return false
-    const get = this.get(stringKey);
-    console.log(pattern);
-    let transform = new TransformIterator();
-    transform.source = get.clone();
-    transform.on('data', (item) => {
-      console.log(item);
-      // this.store.del(item).then(resp => {
-      //   console.log(`Item ${resp} has been deleted;`)
-      // }).catch(e => {
-      //   throw e;
-      // })
-    });
-    return get;
+  del(pattern) {
+    if(this.store.del(JSON.parse(pattern))){
+      this.keys.delete(pattern);
+      return true;
+    } else {
+      return false;
+    }
   }
 }
