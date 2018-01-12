@@ -33,14 +33,14 @@ module.exports = class PriorityDoubleLinkedList {
         debug('mostfrequent: ', mf);
         return mf;
     }
-    
+
     _push(value, priority = 1) {
         debug('push: ', value);
         const n = this.queue.push(value);
         this.queue._map.set(value, {node: n, priority});
         return n;
     }
-    
+
     _unshift(value, priority = 1){
         debug('unshift: ', value);
         const n = this.queue.unshift(value);
@@ -72,9 +72,17 @@ module.exports = class PriorityDoubleLinkedList {
                 this.increase(value);
                 node = this.get(value);
             }
-            
+
             // firstly, remove the node;
-            const place = this._goDown(node, this.getPriority(value));
+            let place;
+            try {
+              place = this._goDown(node, this.getPriority(value));
+            } catch (e) {
+              debug(this.length, value, node.value, node.next.value);
+
+              throw e;
+            }
+
             //debug('We find a place: ', place.value, ` Prev: ${place.prev.value} Next: ${place.next.value}`)
 
             return this.moveafter(node, place);
@@ -82,25 +90,26 @@ module.exports = class PriorityDoubleLinkedList {
     }
 
     next(node) {
-        // debug(`there is ${this.length} element(s) in the queue, head:`, this.queue.node.value)
-        if (!node) {
-            // debug('next: node is undefined');
-            return this.queue.node
-        } else {
-            if(node.next === this.queue.node) {
-                // debug('next; next does nt exists, return null.')
-                return null;
-            } else {
-                // debug('next: next is available, return next.')
-                return node.next;
-            }
-        }
+        // // debug(`there is ${this.length} element(s) in the queue, head:`, this.queue.node.value)
+        // if (!node) {
+        //     // debug('next: node is undefined');
+        //     return this.queue.node
+        // } else {
+        //     if(node.next === this.queue.node) {
+        //         // debug('next; next does nt exists, return null.')
+        //         return null;
+        //     } else {
+        //         // debug('next: next is available, return next.')
+        //         return node.next;
+        //     }
+        // }
+      return this.queue.next(node);
     }
 
     /**
      * Move the node 'node' after the node 'after'
-     * @param {*} node 
-     * @param {*} after 
+     * @param {*} node
+     * @param {*} after
      */
     moveafter(node, after) {
         if(node === after) {
@@ -142,21 +151,30 @@ module.exports = class PriorityDoubleLinkedList {
     }
 
     _goDown(node, priority) {
-        let next = this.next(node);
-		//debug('godown: ', node.value, node.prev.value, node.next.value );
-        if(!next || next === null) {
-            //debug('godown: [*] stop cause we are at the end', node.value)
-            return node;
-        }
+      // if(!node) throw new Error('The node need to be a node. Not undefined !')
+      let next = this.next(node);
+	    // debug('godown: ', node.value, node.prev.value, node.next.value );
+      if(!next || next === null) {
+          debug('godown: [*] stop cause we are at the end', node.value, next)
+          return node;
+      } else {
         const prio = this.getPriority(next.value);
+        if(!node || next === null || node.next === null) throw new Error('The node need to be a node. Not undefined !')
         if (next && priority >= prio) {
-            //debug('godown: continue to search...')
-            // process.exit(0)
+          // debug('problem: ', node.value, node.prev.value, node.next.value );
+          // debug('godown: continue to search...')
+          // process.exit(0)
+          try {
+            debug('godown: ', next.value, typeof next.value );
             return this._goDown(next, priority);
+          } catch (e) {
+            throw e;
+          }
         } else {
-            //debug('godown: [*] stop cause we found a place to be.');
-            return node;
+          debug('godown: [*] stop cause we found a place to be.');
+          return node;
         }
+      }
     }
 
     increase (value) {
@@ -185,7 +203,7 @@ module.exports = class PriorityDoubleLinkedList {
         const entry = this.queue._map.get(value);
         return entry?entry.priority:undefined;
     }
-  
+
     delete(value) {
         const node = this.get(value);
         if(node) {

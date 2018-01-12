@@ -188,5 +188,16 @@ describe('PMDLL (PriorityMapDoubleLinkedList)', function() {
       assert.equal(list.leastFrequent, 'a', 'least frequent');
       assert.equal(list.mostFrequent, 'c', 'most frequent');
     });
+
+    it('should correctly react with 10 000 elements', function(done) {
+			const arr = Array(10000);
+      for(let i = 0; i <arr.length; ++i){
+        arr[i] = Math.random() * 10000
+      }
+			let list = new PDLLMap();
+      setm(arr, list);
+      assert(list.length, 10000);
+      done();
+    });
   });
 });
