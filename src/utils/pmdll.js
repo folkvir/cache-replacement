@@ -17,6 +17,7 @@ const debug = require('debug')('pmdll');
 module.exports = class PriorityDoubleLinkedList {
     constructor() {
         this.queue = new MapDoubleLinkedList();
+        this.priorityMap = new Map();
     }
 
     get length () {
@@ -78,8 +79,7 @@ module.exports = class PriorityDoubleLinkedList {
             try {
               place = this._goDown(node, this.getPriority(value));
             } catch (e) {
-              debug(this.length, value, node.value, node.next.value);
-
+              console.log(this.length, value, node.value, node.prev.value, node.next.value);
               throw e;
             }
 

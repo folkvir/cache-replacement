@@ -190,6 +190,7 @@ describe('PMDLL (PriorityMapDoubleLinkedList)', function() {
     });
 
     it('should correctly react with 10 000 elements', function(done) {
+      this.timeout(5000);
 			const arr = Array(10000);
       for(let i = 0; i <arr.length; ++i){
         arr[i] = Math.random() * 10000
