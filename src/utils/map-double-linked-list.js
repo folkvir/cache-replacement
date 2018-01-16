@@ -31,6 +31,16 @@ module.exports = class MapDoubleLinkedList extends FIFO {
     return node;
   }
 
+  delete(key) {
+    const node = this.find(key);
+    if(node) {
+      this.remove(node);
+      this._map.delete(node.value);
+      return true;
+    } else {
+      return false;
+    }
+  }
 
   /**
    * Return a node given its value

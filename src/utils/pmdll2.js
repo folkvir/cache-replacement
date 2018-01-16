@@ -1,5 +1,5 @@
 const debug = require('debug');
-const MapDoubleLinkedList = require('./map-double-linked-list.js');
+const FIFO = require('fifo');
 /**
  * Author: GRALL ARNAUD, github: Folkvir, 
  * => All operations in O(1), has, get, del, set, leastFrequent, mostFrequent, delMostFrequent, delLeastFrequent, length, getPriority
@@ -99,7 +99,7 @@ module.exports = class PriorityQueue {
         } 
         // if the elem is the leastFrequent
         if(elem.id === this._leastFrequent.id) {
-          this._leastFrequent = this._bucket.getLeastFrequent(elem.priority);
+          this._leastFrequent = this._bucket.getLastRecentlyUsed(elem.priority);
         }
         
       }
@@ -128,34 +128,50 @@ module.exports = class PriorityQueue {
 
 class PriorityBucket {
   constructor() {
+    this._smallestPriority = undefined;
+    this._highestPriority = undefined;
     this._values = new Map();  
   }
 
-  has(priority){
-    return this._values.has(priority);
+  delete(priority, id) {
+    const has = this._values.has(priority);
+    if(has) {
+      if(has.values.has(id)) {
+        return has.delete(id);
+      } else {
+        return false;
+      }
+    } else  {
+      return false;
+    }
+  }
+
+  get(priority, id) {
+    return this._values.get(priority).find(key);
+  }
+
+  has(priority, id){
+    return this._values.has(priority).find(key);
   }
 
   set(priority, id) {
     // if the bucket does not exists, create it
     if(!this._values.has(priority)) {
-      this._values.set(priority, this._create(priority));
+      this._values.set(priority, new FIFO());
     }
-    // if the node does not exists, add it to 
+    // if the node does not exists, add it to the appropriate queue
+    const find = this.get(priority).find(key);
+    if(this.get(priority).
+    this._values.get(priority).push()
     this._values.get(priority).values.bump()
   }
 
   get lastRecentlyUsed() {
-
+    
   }
 
   get mostRecentlyUsed() {
 
   }
 
-  _create(priority) {
-    return {
-      priority,
-      values: new FIFO()
-    }
-  }
 }
