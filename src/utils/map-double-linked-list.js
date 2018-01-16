@@ -5,7 +5,7 @@ module.exports = class MapDoubleLinkedList extends FIFO {
     super(options);
     this._map = new Map();
   }
-
+  
   // redefinition of insertions
   push(value) {
     const n = super.push(value);

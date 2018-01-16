@@ -1,5 +1,5 @@
 const debug = require('debug');
-const FIFO = require('fifo');
+const MapDoubleLinkedList = require('./map-double-linked-list.js');
 /**
  * Author: GRALL ARNAUD, github: Folkvir, 
  * => All operations in O(1), has, get, del, set, leastFrequent, mostFrequent, delMostFrequent, delLeastFrequent, length, getPriority
@@ -151,7 +151,7 @@ class PriorityBucket {
   }
 
   has(priority, id){
-    return this._values.has(priority).find(key);
+    return this._values.has(priority);
   }
 
   set(priority, id) {
