@@ -1,13 +1,12 @@
-const RdfStore = require('rdfstore');
-const debug = require('debug')('rdfstore');
-const utils = require('../utils/n3parser.js');
-
+const RdfStore = require('rdfstore')
+const debug = require('debug')('rdfstore')
+const utils = require('../utils/n3parser.js')
 
 module.exports = class RDFStore {
-  constructor(options = { prefix: [] }) {
-    this.options = options;
-    this._prefix = [];
-    this._size = 0;
+  constructor (options = { prefix: [] }) {
+    this.options = options
+    this._prefix = []
+    this._size = 0
   }
   /**
    * Create our triple store
@@ -16,14 +15,14 @@ module.exports = class RDFStore {
    */
   async create (options = this.options) {
     return new Promise((resolve, reject) => {
-      this.options = options;
-      this.utils = utils;
+      this.options = options
+      this.utils = utils
       RdfStore.create((err, store) => {
-        if(err) reject(err);
-        this.store = store;
-        debug('RDF Store ready.');
-        resolve(this.store);
-      });
+        if (err) reject(err)
+        this.store = store
+        debug('RDF Store ready.')
+        resolve(this.store)
+      })
     })
   }
 
@@ -33,9 +32,9 @@ module.exports = class RDFStore {
    */
   get freshTriple () {
     return {
-      subject: "",
-      predicate: "",
-      object: ""
+      subject: '',
+      predicate: '',
+      object: ''
     }
   }
 
@@ -45,11 +44,11 @@ module.exports = class RDFStore {
    * @param  {[type]}  [self=this] [description]
    * @return {Promise}             [description]
    */
-  async get(triple, self = this) {
-    if(!utils.isTriple(triple)) {
+  async get (triple, self = this) {
+    if (!utils.isTriple(triple)) {
       return Promise.reject(new Error("Need to be a triple: {subject: 'a' , predicate: 'x', object:'z' }"))
     }
-    return self.getFromTriplePattern(triple, self.store);
+    return self.getFromTriplePattern(triple, self.store)
   }
 
   /**
@@ -59,21 +58,21 @@ module.exports = class RDFStore {
    * @param  {[type]}  [self=this] [description]
    * @return {Promise}             [description]
    */
-  async set(key, value, self = this) {
-    if(!value) value = key;
-    if(!utils.isTriple(key) || !utils.isTriple(value)) {
+  async set (key, value, self = this) {
+    if (!value) value = key
+    if (!utils.isTriple(key) || !utils.isTriple(value)) {
       return Promise.reject(new Error("Need to be a triple: {subject: 'a' , predicate: 'x', object:'z' }"))
     }
-    if(!await self.has(key, self)) {
+    if (!await self.has(key, self)) {
       try {
-        const res = await self.insertFromTriplePattern(key, self.store);
-        self._size += 1;
-        return Promise.resolve(true);
+        await self.insertFromTriplePattern(key, self.store)
+        self._size += 1
+        return Promise.resolve(true)
       } catch (error) {
-        return Promise.reject(error);
+        return Promise.reject(error)
       }
     } else {
-      return Promise.resolve(false);
+      return Promise.resolve(false)
     }
   }
 
@@ -83,34 +82,33 @@ module.exports = class RDFStore {
    * @param  {[type]}  [self=this] [description]
    * @return {Promise}             [description]
    */
-  async has(triple, self = this) {
-    if(!utils.isTriple(triple)) {
+  async has (triple, self = this) {
+    if (!utils.isTriple(triple)) {
       return Promise.reject(new Error("Need to be a triple: {subject: 'a' , predicate: 'x', object:'z' }"))
     }
-    return self.askFromTriplePattern(triple, self.store);
+    return self.askFromTriplePattern(triple, self.store)
   }
-
 
   /**
    * Reset the cache to an empty cache
    * @return {Boolean} true if clear, false otherwise
    */
-  async clear(self = this) {
-    return await new Promise((resolve, reject) => {
+  async clear (self = this) {
+    return new Promise((resolve, reject) => {
       try {
-        self.store.clear(() => {
-          if(err) {
-            console.warn(err);
-            resolve(false);
+        self.store.clear((err) => {
+          if (err) {
+            console.warn(err)
+            resolve(false)
           } else {
-            self._size = 0;
-            resolve(true);
+            self._size = 0
+            resolve(true)
           }
-        });
+        })
       } catch (error) {
-        reject(error);
+        reject(error)
       }
-    });
+    })
   }
 
   /**
@@ -118,25 +116,25 @@ module.exports = class RDFStore {
    * @param  {[type]} key
    * @return {Boolean} true if deleted, false otherwise
    */
-  async del(triple, self = this) {
-    if(!utils.isTriple(triple)) {
+  async del (triple, self = this) {
+    if (!utils.isTriple(triple)) {
       return Promise.reject(new Error("Need to be a triple: {subject: 'a' , predicate: 'x', object:'z' }"))
     }
 
-    if(await self.has(triple, self)) {
+    if (await self.has(triple, self)) {
       try {
-        const res = await self.deleteFromTriplePattern(triple, self.store);
-        if(res) {
-          self._size = self._size - 1;
-          return Promise.resolve(true);
+        const res = await self.deleteFromTriplePattern(triple, self.store)
+        if (res) {
+          self._size = self._size - 1
+          return Promise.resolve(true)
         } else {
-          return Promise.resolve(false);
+          return Promise.resolve(false)
         }
       } catch (error) {
-        return Promise.reject(error);
+        return Promise.reject(error)
       }
     } else {
-      return Promise.resolve(false);
+      return Promise.resolve(false)
     }
   }
 
@@ -144,8 +142,8 @@ module.exports = class RDFStore {
    * Get the size of the cache
    * @return {Number}
    */
-  async size(self = this) {
-    return self._size;
+  async size (self = this) {
+    return self._size
   }
 
   /**
@@ -155,19 +153,19 @@ module.exports = class RDFStore {
    * @param  {[type]}  store  [description]
    * @return {Promise}        [description]
    */
-  async getFromTriplePattern(triple,  store) {
+  async getFromTriplePattern (triple, store) {
     return new Promise((resolve, reject) => {
       try {
-        const query = `CONSTRUCT { ${triple.subject} ${triple.predicate} ${triple.object} . } WHERE { ${triple.subject} ${triple.predicate} ${triple.object} }`;
-        store.execute(query, function(err, results){
-          if(err) reject(err);
+        const query = `CONSTRUCT { ${triple.subject} ${triple.predicate} ${triple.object} . } WHERE { ${triple.subject} ${triple.predicate} ${triple.object} }`
+        store.execute(query, function (err, results) {
+          if (err) reject(err)
           debug('Getting: ', triple, 'Status: ', results)
-          resolve(results);
-        });
+          resolve(results)
+        })
       } catch (error) {
-        reject(error);
+        reject(error)
       }
-    });
+    })
   }
 
   /**
@@ -177,16 +175,16 @@ module.exports = class RDFStore {
    * @param  {[type]}  store  [description]
    * @return {Promise}        [description]
    */
-  async askFromTriplePattern(triple, store) {
+  async askFromTriplePattern (triple, store) {
     return new Promise((resolve, reject) => {
       try {
         store.execute(`ASK { ${triple.subject} ${triple.predicate} ${triple.object} . }`, (err, results) => {
-          if(err) reject(err);
+          if (err) reject(err)
           debug('Asking: ', triple, 'Status: ', results)
-          resolve(results);
-        });
+          resolve(results)
+        })
       } catch (error) {
-        reject(error);
+        reject(error)
       }
     })
   }
@@ -198,18 +196,18 @@ module.exports = class RDFStore {
    * @param  {[type]}  store  [description]
    * @return {Promise}        [description]
    */
-  async deleteFromTriplePattern(triple, store) {
+  async deleteFromTriplePattern (triple, store) {
     return new Promise((resolve, reject) => {
       try {
         store.execute(`DELETE DATA { ${triple.subject} ${triple.predicate} ${triple.object} . }`, (err, results) => {
-          if(err) reject(err);
+          if (err) reject(err)
           debug('Deleting: ', triple, 'Status: ', results)
-          resolve(results);
+          resolve(results)
         })
       } catch (e) {
-          reject(e);
+        reject(e)
       }
-    });
+    })
   }
 
   /**
@@ -218,18 +216,18 @@ module.exports = class RDFStore {
    * @param  {[type]}  store  [description]
    * @return {Promise}        [description]
    */
-  async insertFromTriplePattern(triple, store) {
+  async insertFromTriplePattern (triple, store) {
     return new Promise((resolve, reject) => {
       try {
         store.execute(`INSERT DATA { ${triple.subject} ${triple.predicate} ${triple.object} . }`, (err, results) => {
-          if(err) reject(err);
+          if (err) reject(err)
           debug('Inserting: ', triple, 'Status: ', results)
-          resolve(results);
+          resolve(results)
         })
       } catch (e) {
-        reject(e);
+        reject(e)
       }
-    });
+    })
   }
 
   /**
@@ -241,14 +239,14 @@ module.exports = class RDFStore {
     return new Promise((resolve, reject) => {
       try {
         store.execute(query, (err, results) => {
-          if(err) reject(err);
+          if (err) reject(err)
           console.log('Querying: ', query, 'Results: ', results)
           debug('Querying: ', query, 'Results: ', results)
-          resolve(results);
+          resolve(results)
         })
       } catch (e) {
-        reject(e);
+        reject(e)
       }
-    });
+    })
   }
 }

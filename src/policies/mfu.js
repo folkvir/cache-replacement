@@ -1,41 +1,20 @@
-const MFUQueue = require('../utils/pmdll.js');
-const NodeCache = require('../default-cache/memory-cache');
-const debug = require('debug')('mfu');
+const MFUCache = require('../utils/priority-cache.js')
+const debug = require('debug')('mfu')
 
-module.exports = class MFUPolicy extends NodeCache{
-  constructor(options = {max: Infinity}) {
-    super(options);
-    this.keys = new MFUQueue();
+module.exports = class MFUPolicy extends MFUCache {
+  constructor (options = {max: Infinity}) {
+    super(options)
     this.max = options.max
   }
 
-  get(key) {
-    const res = super.get(key);
-    res && this.keys.set(key);
-    return res;
-  }
-
-  set(key, value) {
-    const res = super.set(key, value);
-    if(res && !this.keys.has(key)){
-      const max = this.max, size = this.keys.length;
-      if(size >= max) {
-        const mostFrequent = this.keys.mostFrequent;
-        if(mostFrequent != key) this.del(mostFrequent);
-      }
+  set (key, value) {
+    debug('Setting key:', key)
+    const max = this.max
+    const size = this.length
+    if (size >= max) {
+      const mostFrequent = this.mostFrequent.key
+      if (mostFrequent !== key) this.delete(mostFrequent)
     }
-    this.keys.set(key);
-    return res;
-  }
-
-  clear() {
-    this.keys.clear()
-    return super.clear();
-  }
-
-  del(key) {
-    const del = super.del(key);
-    del && this.keys.delete(key);
-    return del;
+    return super.set(key, value)
   }
 }

@@ -1,12 +1,12 @@
-const Store = require('n3').Store;
+const Store = require('n3').Store
 
 module.exports = class TriplStore {
-  constructor() {
-    this._store = new Store();
+  constructor () {
+    this._store = new Store()
   }
 
   get store () {
-    return this._store;
+    return this._store
   }
 
   /**
@@ -14,8 +14,8 @@ module.exports = class TriplStore {
    * @param  {String} key
    * @return {Object}
    */
-  get(key) {
-    return this._store.getTriples(key);
+  get (key) {
+    return this._store.getTriples(key)
   }
 
   /**
@@ -24,8 +24,8 @@ module.exports = class TriplStore {
    * @param {Object} value   [description]
    * @param {Boolean} return true if set or false otherwise
    */
-  set(key, value) {
-    return this._store.addTriple(key.subject, key.predicate, key.object, key.graph);
+  set (key, value) {
+    return this._store.addTriple(key.subject, key.predicate, key.object, key.graph)
   }
 
   /**
@@ -33,23 +33,23 @@ module.exports = class TriplStore {
    * @param  {String}  key
    * @return {Boolean}     true or false
    */
-  has(key) {
-    const size = this._store.countTriples(key);
-    if(size > 0) return true;
-    return false;
+  has (key) {
+    const size = this._store.countTriples(key)
+    if (size > 0) return true
+    return false
   }
 
   /**
    * Reset the cache to an empty cache
    * @return {Boolean} true if clear, false otherwise
    */
-  clear() {
+  clear () {
     try {
-      this._store = new Store();
-      return true;
+      this._store = new Store()
+      return true
     } catch (e) {
-      console.log(e);
-      return e;
+      console.log(e)
+      return e
     }
   }
 
@@ -58,15 +58,15 @@ module.exports = class TriplStore {
    * @param  {[type]} key
    * @return {Boolean} true if deleted, false otherwise
    */
-  del(key) {
-    return this._store.removeTriple(key.subject, key.predicate, key.object, key.graph);
+  del (key) {
+    return this._store.removeTriple(key.subject, key.predicate, key.object, key.graph)
   }
 
   /**
    * Get the size of the cache
    * @return {Number}
    */
-  size() {
-    return this._store.size;
+  size () {
+    return this._store.size
   }
 }

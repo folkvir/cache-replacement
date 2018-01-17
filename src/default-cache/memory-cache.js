@@ -1,9 +1,9 @@
-const NodeCache = require('memory-cache').Cache;
-const debug = require('debug')('memorycache');
+const NodeCache = require('memory-cache').Cache
+const debug = require('debug')('memorycache')
 
 module.exports = class NodeCacheWrapper {
-  constructor(options) {
-    this.memorycache = new NodeCache();
+  constructor (options) {
+    this.memorycache = new NodeCache()
     // this.memorycache.debug(true);
   }
 
@@ -12,9 +12,9 @@ module.exports = class NodeCacheWrapper {
    * @param  {String} key
    * @return {Object}
    */
-  get(key) {
-    debug('Getting key: ', key);
-    return this.memorycache.get(key);
+  get (key) {
+    debug('Getting key: ', key)
+    return this.memorycache.get(key)
   }
 
   /**
@@ -23,13 +23,13 @@ module.exports = class NodeCacheWrapper {
    * @param {Object} value   [description]
    * @param {Object}
    */
-  set(key, value) {
-    debug('Setting key: ', key);
+  set (key, value) {
+    debug('Setting key: ', key)
     try {
-      this.memorycache.put(key, value);
-      return true;
+      this.memorycache.put(key, value)
+      return true
     } catch (e) {
-      return e;
+      return e
     }
   }
 
@@ -38,22 +38,22 @@ module.exports = class NodeCacheWrapper {
    * @param  {String}  key
    * @return {Boolean}     true or false
    */
-  has(key) {
-    debug('Checking key: ', key);
-    return (this.memorycache.get(key))?true:false;
+  has (key) {
+    debug('Checking key: ', key)
+    return (this.memorycache.get(key) !== null)
   }
 
   /**
    * Reset the cache to an empty cache
    * @return {Boolean} true if cleared,
    */
-  clear() {
-    debug('Clearing cache...');
+  clear () {
+    debug('Clearing cache...')
     try {
-      this.memorycache.clear();
-      return true;
+      this.memorycache.clear()
+      return true
     } catch (e) {
-      return false;
+      return e
     }
   }
 
@@ -62,16 +62,16 @@ module.exports = class NodeCacheWrapper {
    * @param  {[type]} key
    * @return {Boolean} true if deleted, false otherwise
    */
-  del(key) {
-    debug('Deleting key: ', key);
-    return this.memorycache.del(key);
+  del (key) {
+    debug('Deleting key: ', key)
+    return this.memorycache.del(key)
   }
 
   /**
    * Get the size of the cache
    * @return {Number}
    */
-  size() {
-    return this.memorycache.size();
+  size () {
+    return this.memorycache.size()
   }
 }
