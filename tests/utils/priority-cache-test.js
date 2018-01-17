@@ -179,23 +179,25 @@ describe('Priority Cache', function () {
       const arr = ['a', 'a', 'a', 'a', 'a', 'a']
       let list = new PriorityCache()
       setm(arr, list)
-      assert.equal(list.leastFrequent.key, 'b', 'least frequent')
+      assert.equal(list.leastFrequent.key, 'a', 'least frequent')
       assert.equal(list.mostFrequent.key, 'a', 'Most frequent')
-      assert.equal(list.mostRecentlyUsed.key, 'e', 'Most Recently used')
-      assert.equal(list.lastRecentlyUsed.key, 'b', 'last Recently used')
+      assert.equal(list.mostRecentlyUsed.key, 'a', 'Most Recently used')
+      assert.equal(list.lastRecentlyUsed.key, 'a', 'last Recently used')
+      assert.equal(list.length, 1)
+      assert.equal(list.size, 1)
     })
 
-    it('should not remove th rest of the list', function () {
+    it('should have good last/most recently used, least/most frequently var well set after deleting an item', function () {
       const arr = ['a', 'b', 'c']
       let list = new PriorityCache()
       setm(arr, list)
       assert.equal(list.length, 3)
       list.delete('b')
       assert.equal(list.length, 2)
-      assert.equal(list.leastFrequent.key, 'b', 'least frequent')
-      assert.equal(list.mostFrequent.key, 'a', 'Most frequent')
-      assert.equal(list.mostRecentlyUsed.key, 'e', 'Most Recently used')
-      assert.equal(list.lastRecentlyUsed.key, 'b', 'last Recently used')
+      assert.equal(list.leastFrequent.key, 'a', 'least frequent')
+      assert.equal(list.mostFrequent.key, 'b', 'Most frequent')
+      assert.equal(list.mostRecentlyUsed.key, 'b', 'Most Recently used')
+      assert.equal(list.lastRecentlyUsed.key, 'a', 'last Recently used')
     })
 
     // it('should correctly react with 10 000 elements', function (done) {
