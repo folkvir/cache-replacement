@@ -1,25 +1,21 @@
 const FIFO = require('fifo')
+
 /**
- * This data structure enable a way to have least/most frequently used element and last/most recently used element in a very fast manner.
- * O(1) for set, has, delete, get, leastFrequent, lastRecentlyUsed, mostFrequent, mostRecentlyUsed
- * Memory print:
- * * Map(key, { value, priority, node }), Type:  Map(any, { any, Number, Node })
- * * Map(priority, FIFO), Type: Map(Number, DoubleLinkedList<Node>)
- * Where a Node is storing its next and prev node and a value (here, the key)
- * Nodes in the first Map are referenced to nodes in the second one.
- * This data structure is slightly heavier than an actual Map and but have all operations in 0(1).
+ * Data structure that enable the way to retreive the frequency of an item in 0(1) manner
+ * Implemented with a DoubleLinkedList of frequency DoubleLinkedLists managing keys and a Map for value (0(1), get, has, delete)
+ * => last recently used and most recently used access in O(1)
+ * => least frequently used and most frequently used in 0(1)*
+ * In that way you can implement all LRU, MRU, LFU, MFU easily without relying on a specific lib
+ * @type {[type]}
  */
-module.exports = class PriorityBucket {
+module.exports = class LFULRU {
   constructor () {
     this.clear()
   }
 
   clear () {
-    this._mostRecentlyUsedNode = undefined
-    this._smallestPriority = undefined
-    this._highestPriority = undefined
     this._nodes = new Map()
-    this._priorityMap = new Map()
+    this._history = new FIFO()
   }
 
   /**
@@ -39,11 +35,7 @@ module.exports = class PriorityBucket {
    * @return {Boolean}     return true when deleted otherwise false if the key does not exist
    */
   delete (key) {
-    const has = this._nodes.has(key)
-    if (!has) return false
-    const node = this._node.get(key)
-    this._priorityMap.get(node.priority).remove(node.node)
-    return this._nodes.delete(key)
+
   }
 
   /**
@@ -52,16 +44,7 @@ module.exports = class PriorityBucket {
    * @return {Object}
    */
   get (key) {
-    const val = this._nodes.get(key)
-    if (!val) return undefined
-    // increase its priority
-    val.priority++
-    // move the node to the next priority list
-    val.node = this._moveNode(key, val.priority)
-    // set this node as the most recently used
-    this._mostRecentlyUsedNode = val.node
-    // finally return the associated value
-    return val.value
+
   }
 
   /**
@@ -79,67 +62,7 @@ module.exports = class PriorityBucket {
    * @param {Object} value the associated value for the given key
    */
   set (key, value) {
-    try {
-      let priority
-      let node
-      let newNode = false
-      // check if the node exists, otherwise create it
-      if (!this.has(key)) {
-        priority = 0
-        newNode = true
-      } else {
-        priority = this._nodes.get(key).priority
-      }
-      // increase the priority
-      priority++
 
-      // if the bucket does not exists, create it
-      if (!this._priorityMap.has(priority)) {
-        this._priorityMap.set(priority, new FIFO())
-      }
-
-      if (newNode) {
-        // push the new node
-        node = this._priorityMap.get(priority).push(key)
-      } else {
-        node = this._moveNode(key, priority)
-      }
-      // check smallest and biggest priority
-      this._setMinMaxPriority(priority)
-      this._nodes.set(key, { priority, value, node })
-
-      this._nodes.get(key).priority = priority
-      // set this node as the most recently used
-      this._mostRecentlyUsedNode = node
-      return true
-    } catch (e) {
-      return e
-    }
-  }
-
-  /**
-   * @private
-   * PRIVATE USE ONLY SINCE WE DO NOT CHECK IF THE BUCKET EXISTS HERE !
-   * Description: Move the node to the next priority queue
-   * @param  {Object} key
-   * @param  {Object} key
-   * @return {Node} retun the associated node
-   */
-  _moveNode (key, priority) {
-    let node = this._nodes.get(key).node
-    // delete the node from its current list
-    this._priorityMap.get(priority - 1).remove(node)
-
-    // check if the bucket is empty
-    const lastPriority = priority - 1
-    if (this._priorityMap.get(lastPriority).isEmpty()) {
-      if (lastPriority === this._smallestPriority) this._smallestPriority = priority
-    }
-
-    // push the node to the end of the appropriated priority list
-    node = this._priorityMap.get(priority).push(key)
-    this._nodes.get(key).node = node
-    return node
   }
 
   /**
@@ -147,7 +70,7 @@ module.exports = class PriorityBucket {
    * @return {Object} the value stored
    */
   get lastRecentlyUsed () {
-    return this.leastFrequent
+
   }
 
   /**
@@ -155,7 +78,7 @@ module.exports = class PriorityBucket {
    * @return {Object} the value stored
    */
   get mostRecentlyUsed () {
-    return { key: this._mostRecentlyUsedNode.value, value: this._nodes.get(this._mostRecentlyUsedNode.value).value }
+
   }
 
   /**
@@ -163,7 +86,7 @@ module.exports = class PriorityBucket {
    * @return {Object} the value stored
    */
   get leastFrequent () {
-    return { key: this._priorityMap.get(this._smallestPriority).first(), value: this._nodes.get(this._priorityMap.get(this._smallestPriority).first()).value }
+
   }
 
   /**
@@ -171,7 +94,7 @@ module.exports = class PriorityBucket {
    * @return {Object} the value stored
    */
   get mostFrequent () {
-    return { key: this._priorityMap.get(this._highestPriority).last(), value: this._nodes.get(this._priorityMap.get(this._highestPriority).last()).value }
+
   }
 
   /**
@@ -180,27 +103,7 @@ module.exports = class PriorityBucket {
    * @return {Object}
    */
   getPriority (key) {
-    const res = this._nodes.get(key)
-    if (res) return res.priority
-    return undefined
-  }
 
-  /**
-   * @private
-   * Set the smallest and biggest priority value
-   * @param {Number} priority The new priority
-   */
-  _setMinMaxPriority (priority) {
-    if (this.length === 0) {
-      this._smallestPriority = priority
-      this._highestPriority = priority
-    } else {
-      if (priority < this._smallestPriority) {
-        this._smallestPriority = priority
-      } else if (priority > this._highestPriority) {
-        this._highestPriority = priority
-      }
-    }
   }
 
   /**

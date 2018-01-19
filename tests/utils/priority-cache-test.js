@@ -179,6 +179,9 @@ describe('Priority Cache', function () {
       const arr = ['a', 'a', 'a', 'a', 'a', 'a']
       let list = new PriorityCache()
       setm(arr, list)
+      list.forEach((e, k) => {
+        console.log(k, e.last)
+      })
       assert.equal(list.leastFrequent.key, 'a', 'least frequent')
       assert.equal(list.mostFrequent.key, 'a', 'Most frequent')
       assert.equal(list.mostRecentlyUsed.key, 'a', 'Most Recently used')
@@ -187,16 +190,24 @@ describe('Priority Cache', function () {
       assert.equal(list.size, 1)
     })
 
-    it('should have good last/most recently used, least/most frequently var well set after deleting an item', function () {
-      const arr = ['a', 'b', 'c']
+    it('should have well set var (last/most recently used, least/most frequently) after deleting an item', function () {
+      const arr = ['a', 'b', 'c', 'b']
       let list = new PriorityCache()
       setm(arr, list)
       assert.equal(list.length, 3)
-      list.delete('b')
-      assert.equal(list.length, 2)
       assert.equal(list.leastFrequent.key, 'a', 'least frequent')
       assert.equal(list.mostFrequent.key, 'b', 'Most frequent')
       assert.equal(list.mostRecentlyUsed.key, 'b', 'Most Recently used')
+      assert.equal(list.lastRecentlyUsed.key, 'a', 'last Recently used')
+      list.delete('b')
+      list.forEach((v, k) => {
+        console.log(`K = ${k} => `, v, list._highestPriority, list._priorityMap.get(list._highestPriority))
+      })
+      // console.log(list._history.first(), list._history.last(), list._priorityMap.get(list._smallestPriority).first(), list._priorityMap.get(list._highestPriority).last(),
+      assert.equal(list.length, 2)
+      assert.equal(list.leastFrequent.key, 'a', 'least frequent')
+      assert.equal(list.mostFrequent.key, 'c', 'Most frequent')
+      assert.equal(list.mostRecentlyUsed.key, 'c', 'Most Recently used')
       assert.equal(list.lastRecentlyUsed.key, 'a', 'last Recently used')
     })
 
