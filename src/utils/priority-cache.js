@@ -1,14 +1,16 @@
 const FIFO = require('fifo')
+const debug = require('debug')('weightedqueue')
 
 /**
  * Data structure that enable the way to retreive the frequency of an item in 0(1) manner
- * Implemented with a DoubleLinkedList of frequency DoubleLinkedLists managing keys and a Map for value (0(1), get, has, delete)
+ * Implemented with a DoubleLinkedList of DoubleLinkedList managing keys with their priorities and a Map for value access in O(1) (0(1) for get, has, delete methods)
+ * eg: {{weight: 1, queue: {a, b, c}}, {wieght: 2, queue: {d, e, f}}, ...}
  * => last recently used and most recently used access in O(1)
- * => least frequently used and most frequently used in 0(1)*
+ * => least frequently used and most frequently used access in 0(1)
  * In that way you can implement all LRU, MRU, LFU, MFU easily without relying on a specific lib
  * @type {[type]}
  */
-module.exports = class LFULRU {
+module.exports = class WeightedQueue {
   constructor () {
     this.clear()
   }
@@ -16,6 +18,7 @@ module.exports = class LFULRU {
   clear () {
     this._nodes = new Map()
     this._history = new FIFO()
+    this._lastNode = undefined
   }
 
   /**
@@ -35,7 +38,14 @@ module.exports = class LFULRU {
    * @return {Boolean}     return true when deleted otherwise false if the key does not exist
    */
   delete (key) {
-
+    if (!this.has(key)) return false
+    const val = this._nodes.get(key)
+    const weightedQueue = val.weightedQueue
+    const element = val.element
+    weightedQueue.value.queue.remove(element.node)
+    if (weightedQueue.value.queue.length === 0) this._history.remove(weightedQueue)
+    this._lastNode = element.prev
+    return this._nodes.delete(key)
   }
 
   /**
@@ -44,7 +54,39 @@ module.exports = class LFULRU {
    * @return {Object}
    */
   get (key) {
+    debug('Getting:', key)
+    if (!this._nodes.has(key)) return
+    const val = this._nodes.get(key)
+    const weightedQueue = val.weightedQueue
+    const element = val.element
+    let nextWeightedQueue = this._history.next(val.weightedQueue)
+    weightedQueue.value.queue.remove(element.node)
+    if (nextWeightedQueue) {
+      debug('**Getting a new key: there is a next weighted queue', key)
+      // delete the actual element and add it to the new weightedQueue
+      if (nextWeightedQueue.value.weight !== (weightedQueue.value.weight + 1)) {
+        debug('**Getting a new key: there is a next weighted queue but whithout the correct wieght...', key)
+        // this is not the right weighted queue
+        // // set the next to the new one
+        nextWeightedQueue = this._createFIFONode(this._createWeightedFifo(weightedQueue.value.weight + 1), weightedQueue.prev, weightedQueue.next)
+        // insert the new one after the old and before the next if one
+        this._insertWeightedAfter(nextWeightedQueue, weightedQueue)
+      }
+    } else {
+      debug('**Getting a new key: there is no next weighted queue', key)
+      // create the new weighted queue
+      nextWeightedQueue = this._history.push(this._createWeightedFifo(weightedQueue.value.weight + 1))
+    }
+    // if the old weightedQueue is empty, delete it
+    if (weightedQueue.value.queue.length === 0) this._history.remove(weightedQueue)
 
+    // set the weighted queue of the element
+    val.weightedQueue = nextWeightedQueue
+    element.node = nextWeightedQueue.value.queue.push(key)
+    // this._nodes.set(key, this._createNode(key, element.value, element.weightedQueue, element.node, this._lastNode, null))
+    // set next of the last node to the current one
+    this._setLastNode(element.node)
+    return this._nodes.get(key).value
   }
 
   /**
@@ -62,7 +104,40 @@ module.exports = class LFULRU {
    * @param {Object} value the associated value for the given key
    */
   set (key, value) {
-
+    debug('Setting key: ', key)
+    let val = this._nodes.get(key)
+    // debug('**Old value: ', val)
+    let node
+    if (val === undefined) {
+      debug('**Setting a new key: ', key)
+      const firstWeightedQueue = this._history.node
+      let weightedQueue
+      if (firstWeightedQueue === null) {
+        debug('**Setting a new key: ', key, ' - this is the first element.')
+        weightedQueue = this._createWeightedFifo(1)
+        node = weightedQueue.queue.push(key)
+        weightedQueue = this._history.push(weightedQueue)
+        this._nodes.set(key, this._createNode(key, value, weightedQueue, node, null, null))
+        this._nodes.get(key).element.prev = this._nodes.get(key).element
+        this._nodes.get(key).element.next = this._nodes.get(key).element
+      } else if (firstWeightedQueue.value.weight === 1) {
+        debug('**Setting a new key: ', key, ' - the weighted queue with weight=1 already exist.')
+        node = firstWeightedQueue.value.queue.push(key)
+        this._nodes.set(key, this._createNode(key, value, firstWeightedQueue, node, this._lastNode, this._lastNode.next))
+      } else {
+        debug('**Setting a new key: ', key, ' - the weighted queue with weight=1 does not already exist.')
+        weightedQueue = this._createWeightedFifo(1)
+        node = weightedQueue.queue.push(key)
+        weightedQueue = this._history.unshift(weightedQueue)
+        this._nodes.set(key, this._createNode(key, value, weightedQueue, node, this._lastNode, this._lastNode.next))
+      }
+    } else {
+      // delete the element and set this element to its new value priority === 1
+      this.delete(key)
+      return this.set(key, value)
+    }
+    this._setLastNode(node)
+    return true
   }
 
   /**
@@ -70,7 +145,12 @@ module.exports = class LFULRU {
    * @return {Object} the value stored
    */
   get lastRecentlyUsed () {
-
+    const res = { key: undefined, value: undefined }
+    if (!this._lastNode) return
+    res.key = this._lastNode.next.node.value
+    debug('LastRecentlyUSed: ', res.key)
+    res.value = this._nodes.get(res.key).value
+    return res
   }
 
   /**
@@ -78,7 +158,12 @@ module.exports = class LFULRU {
    * @return {Object} the value stored
    */
   get mostRecentlyUsed () {
-
+    const res = { key: undefined, value: undefined }
+    if (!this._lastNode) return
+    res.key = this._lastNode.node.value
+    debug('mostRecentlyUSed: ', res.key)
+    res.value = this._nodes.get(res.key).value
+    return res
   }
 
   /**
@@ -86,7 +171,12 @@ module.exports = class LFULRU {
    * @return {Object} the value stored
    */
   get leastFrequent () {
-
+    const res = { key: undefined, value: undefined }
+    if (this._history.length === 0 || this._history.first().queue === 0) return
+    res.key = this._history.first().queue.first()
+    debug('LeastFrequent: ', res.key)
+    res.value = this._nodes.get(res.key).value
+    return res
   }
 
   /**
@@ -94,7 +184,12 @@ module.exports = class LFULRU {
    * @return {Object} the value stored
    */
   get mostFrequent () {
-
+    const res = { key: undefined, value: undefined }
+    if (this._history.length === 0 || this._history.last().queue === 0) return
+    res.key = this._history.last().queue.last()
+    debug('MostFrequent: ', res.key)
+    res.value = this._nodes.get(res.key).value
+    return res
   }
 
   /**
@@ -103,7 +198,8 @@ module.exports = class LFULRU {
    * @return {Object}
    */
   getPriority (key) {
-
+    if (!this.has(key)) return false
+    return this._nodes.get(key).weightedQueue.value.weight
   }
 
   /**
@@ -113,5 +209,83 @@ module.exports = class LFULRU {
    */
   forEach (fn) {
     this._nodes.forEach(fn)
+  }
+
+  /**
+   * forEach loop on all weighted bucket
+   * @param  {Function} fn [description]
+   * @return {[type]}      [description]
+   */
+  forEachWeight (fn) {
+    this._history.forEach((elem) => {
+      fn({ weight: elem.weight, array: elem.queue.toArray(), queue: elem.queue })
+    })
+  }
+
+  /**
+   * @private
+   */
+  _insertWeightedAfter (node, place) {
+    const placeNext = place.next
+    place.link(node)
+    node.link(placeNext)
+  }
+
+  _createFIFONode (value, prev, next) {
+    function Node (list, val) {
+      this.prev = this.next = this
+      this.value = val
+      this.list = list
+    }
+    const node = new Node(this._history, value)
+    node.prev = prev
+    node.next = next
+    return node
+  }
+
+  _setLastNode (node) {
+    const us = this._nodes.get(node.value).element
+    if (this._lastNode) {
+      const last = this._nodes.get(this._lastNode.node.value).element
+      const begin = this._nodes.get(this._lastNode.next.node.value).element
+      begin.prev = us
+      us.prev = last
+      us.next = begin
+
+      last.next = us
+      // if (us.node.value === begin.node.value) us.next = begin.next
+      debug('New last node: ', us.node.value, `Prev: ${last.node.value}, Next: ${begin.node.value}`)
+    }
+    // // set next of the last node to the current one
+    //
+    // if (this._lastNode) {
+    //   // set the head prev to us
+    //   this._nodes.get(this._lastNode.next.node.value).element.prev = us
+    //   // set prev of us to the lastNode
+    //   us.prev = this._nodes.get(this._lastNode.node.value).element
+    //   us.next = this._nodes.get(this._lastNode.next.node.value).element
+    //   // set the next of the lastnode to us
+    //   console.log(node.value, us.prev.node.value, us.next.node.value, this._nodes.get(this._lastNode.node.value).element.next.node.value)
+    //
+    //   // if (us.prev.node.value === us.next.node.value) us.next = this._nodes.get(this._lastNode.node.value).element.next
+    //   this._nodes.get(this._lastNode.node.value).element.next = us
+    // }
+    // set the last node to the current
+    this._lastNode = us
+  }
+
+  /**
+   * @private
+   */
+  _createNode (key, value, weightedQueue, node, prev, next) {
+    return { key, value, weightedQueue, element: { prev, next, node } }
+  }
+
+  /**
+   * @private
+   */
+  _createWeightedFifo (weight) {
+    debug('**Creation of a new weighted queue: weight=', weight)
+    return { weight, queue: new FIFO() }
   }
 }
