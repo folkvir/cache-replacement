@@ -236,6 +236,11 @@ module.exports = class WeightedQueue {
       this.prev = this.next = this
       this.value = val
       this.list = list
+      this.link = function (next) {
+        this.next = next
+        next.prev = this
+        return next
+      }
     }
     const node = new Node(this._history, value)
     node.prev = prev
@@ -246,13 +251,16 @@ module.exports = class WeightedQueue {
   _setLastNode (node) {
     const us = this._nodes.get(node.value).element
     if (this._lastNode) {
+      console.log(this._lastNode)
       const last = this._nodes.get(this._lastNode.node.value).element
       const begin = this._nodes.get(this._lastNode.next.node.value).element
-      begin.prev = us
-      us.prev = last
-      us.next = begin
-
-      last.next = us
+      last.link(us)
+      us.link(begin)
+      // begin.prev = us
+      // us.prev = last
+      // us.next = begin
+      //
+      // last.next = us
       // if (us.node.value === begin.node.value) us.next = begin.next
       debug('New last node: ', us.node.value, `Prev: ${last.node.value}, Next: ${begin.node.value}`)
     }
@@ -278,7 +286,21 @@ module.exports = class WeightedQueue {
    * @private
    */
   _createNode (key, value, weightedQueue, node, prev, next) {
-    return { key, value, weightedQueue, element: { prev, next, node } }
+    return {
+      key,
+      value,
+      weightedQueue,
+      element: {
+        prev,
+        next,
+        node,
+        link: function (next) {
+          this.next = next
+          next.prev = this
+          return next
+        }
+      }
+    }
   }
 
   /**
