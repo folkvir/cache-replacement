@@ -38,13 +38,17 @@ module.exports = class WeightedQueue {
    * @return {Boolean}     return true when deleted otherwise false if the key does not exist
    */
   delete (key) {
+    debug('Deleting key: ', key)
     if (!this.has(key)) return false
     const val = this._nodes.get(key)
     const weightedQueue = val.weightedQueue
     const element = val.element
     weightedQueue.value.queue.remove(element.node)
     if (weightedQueue.value.queue.length === 0) this._history.remove(weightedQueue)
-    this._lastNode = element.prev
+    element.prev.link(element.next)
+    if (this._lastNode.node.value === key) {
+      this._lastNode = this._lastNode.prev
+    }
     return this._nodes.delete(key)
   }
 
@@ -85,7 +89,7 @@ module.exports = class WeightedQueue {
     element.node = nextWeightedQueue.value.queue.push(key)
     // this._nodes.set(key, this._createNode(key, element.value, element.weightedQueue, element.node, this._lastNode, null))
     // set next of the last node to the current one
-    this._setLastNode(element.node)
+    this._bumpHead(element)
     return this._nodes.get(key).value
   }
 
@@ -117,26 +121,28 @@ module.exports = class WeightedQueue {
         weightedQueue = this._createWeightedFifo(1)
         node = weightedQueue.queue.push(key)
         weightedQueue = this._history.push(weightedQueue)
-        this._nodes.set(key, this._createNode(key, value, weightedQueue, node, null, null))
-        this._nodes.get(key).element.prev = this._nodes.get(key).element
-        this._nodes.get(key).element.next = this._nodes.get(key).element
+        val = this._createNode(key, value, weightedQueue, node, null, null)
+        val.element.prev = val.element
+        val.element.next = val.element
       } else if (firstWeightedQueue.value.weight === 1) {
         debug('**Setting a new key: ', key, ' - the weighted queue with weight=1 already exist.')
         node = firstWeightedQueue.value.queue.push(key)
-        this._nodes.set(key, this._createNode(key, value, firstWeightedQueue, node, this._lastNode, this._lastNode.next))
+        val = this._createNode(key, value, firstWeightedQueue, node, this._lastNode, this._lastNode.next)
       } else {
         debug('**Setting a new key: ', key, ' - the weighted queue with weight=1 does not already exist.')
         weightedQueue = this._createWeightedFifo(1)
         node = weightedQueue.queue.push(key)
         weightedQueue = this._history.unshift(weightedQueue)
-        this._nodes.set(key, this._createNode(key, value, weightedQueue, node, this._lastNode, this._lastNode.next))
+        val = this._createNode(key, value, weightedQueue, node, this._lastNode, this._lastNode.next)
       }
+
+      this._nodes.set(key, val)
     } else {
       // delete the element and set this element to its new value priority === 1
       this.delete(key)
       return this.set(key, value)
     }
-    this._setLastNode(node)
+    this._setLastNode(val.element)
     return true
   }
 
@@ -231,6 +237,9 @@ module.exports = class WeightedQueue {
     node.link(placeNext)
   }
 
+  /**
+   * @private
+   */
   _createFIFONode (value, prev, next) {
     function Node (list, val) {
       this.prev = this.next = this
@@ -248,59 +257,39 @@ module.exports = class WeightedQueue {
     return node
   }
 
-  _setLastNode (node) {
-    const us = this._nodes.get(node.value).element
+  /**
+   * @private
+   * Set the node as the tail
+   */
+  _bumpHead (element) {
+    const prev = element.prev
+    const next = element.next
+    prev.link(next)
+    element.link(this._lastNode.next)
+    this._lastNode.link(element)
+    this._lastNode = element
+    debug('New last node: ', element.node.value, `Prev: ${element.prev.node.value}, Next: ${element.next.node.value}`)
+    debug('New Head : ', element.next.node.value, `Prev: ${element.next.prev.node.value}, Next: ${element.next.next.node.value}`)
+  }
+
+  _setLastNode (element) {
     if (this._lastNode) {
-      console.log(this._lastNode)
-      const last = this._nodes.get(this._lastNode.node.value).element
-      const begin = this._nodes.get(this._lastNode.next.node.value).element
-      last.link(us)
-      us.link(begin)
-      // begin.prev = us
-      // us.prev = last
-      // us.next = begin
-      //
-      // last.next = us
-      // if (us.node.value === begin.node.value) us.next = begin.next
-      debug('New last node: ', us.node.value, `Prev: ${last.node.value}, Next: ${begin.node.value}`)
+      element.link(this._lastNode.next)
+      this._lastNode.link(element)
+      if (element.next.node.value === element.node.value) {
+        element.next = this._lastNode
+      }
     }
-    // // set next of the last node to the current one
-    //
-    // if (this._lastNode) {
-    //   // set the head prev to us
-    //   this._nodes.get(this._lastNode.next.node.value).element.prev = us
-    //   // set prev of us to the lastNode
-    //   us.prev = this._nodes.get(this._lastNode.node.value).element
-    //   us.next = this._nodes.get(this._lastNode.next.node.value).element
-    //   // set the next of the lastnode to us
-    //   console.log(node.value, us.prev.node.value, us.next.node.value, this._nodes.get(this._lastNode.node.value).element.next.node.value)
-    //
-    //   // if (us.prev.node.value === us.next.node.value) us.next = this._nodes.get(this._lastNode.node.value).element.next
-    //   this._nodes.get(this._lastNode.node.value).element.next = us
-    // }
-    // set the last node to the current
-    this._lastNode = us
+    this._lastNode = element
+    debug('New last node: ', element.node.value, `Prev: ${element.prev.node.value}, Next: ${element.next.node.value}`)
+    debug('New Head : ', element.next.node.value, `Prev: ${element.next.prev.node.value}, Next: ${element.next.next.node.value}`)
   }
 
   /**
    * @private
    */
   _createNode (key, value, weightedQueue, node, prev, next) {
-    return {
-      key,
-      value,
-      weightedQueue,
-      element: {
-        prev,
-        next,
-        node,
-        link: function (next) {
-          this.next = next
-          next.prev = this
-          return next
-        }
-      }
-    }
+    return { key, value, weightedQueue, element: { prev, next, node, link: function (next) { this.next = next; next.prev = this; return next } } }
   }
 
   /**

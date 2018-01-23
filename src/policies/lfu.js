@@ -9,12 +9,13 @@ module.exports = class LFUPolicy extends LFUCache {
 
   set (key, value) {
     debug('Setting key:', key)
+    const res = super.set(key, value)
     const max = this.max
     const size = this.length
-    if (size >= max) {
+    if (size > max) {
       const leastFrequent = this.leastFrequent.key
       if (leastFrequent !== key) this.delete(leastFrequent)
     }
-    return super.set(key, value)
+    return res
   }
 }

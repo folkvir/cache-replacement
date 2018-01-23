@@ -9,12 +9,13 @@ module.exports = class MFUPolicy extends MFUCache {
 
   set (key, value) {
     debug('Setting key:', key)
+    const res = super.set(key, value)
     const max = this.max
     const size = this.length
-    if (size >= max) {
+    if (size > max) {
       const mostFrequent = this.mostFrequent.key
       if (mostFrequent !== key) this.delete(mostFrequent)
     }
-    return super.set(key, value)
+    return res
   }
 }
