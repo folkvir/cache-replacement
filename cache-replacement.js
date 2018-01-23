@@ -4,6 +4,7 @@ const lru = require('./src/policies/lru.js')
 const lfu = require('./src/policies/lfu.js')
 const mru = require('./src/policies/mru.js')
 const mfu = require('./src/policies/mfu.js')
+const rr = require('./src/policies/rr.js')
 const triplestore = require('./src/default-cache/triplestore')
 const triplestorewiterator = require('./src/default-cache/triplestore-w-iterator')
 const rdfstore = require('./src/default-cache/rdfstore')
@@ -18,6 +19,7 @@ module.exports = {
   lfu,
   mru,
   mfu,
+  rr,
   memorycache,
   prioritycache,
   triplestore,

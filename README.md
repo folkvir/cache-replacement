@@ -4,6 +4,8 @@
 
 Do you want a specific in-memory cache ? With a specific replacement policy ? This is the right place.
 
+**Motivation:** Always provide fast access to data with a specific replacement policy
+
 By default we implemented some replacement policies:
 * **FIFO**: First In First Out, the first value cached is replaced.
 * **LIFO**: Last In First Out, the last value cached is replaced.
@@ -13,19 +15,20 @@ By default we implemented some replacement policies:
 * **MFU**: Most Frequently Used, the most frequently used calue is replaced.
 * **RR**: Random Replacement in the cache.
 
-**Complexity:**
+**Complexity in the worst case (best case is almost always O(1)):**
 
-Policy/Method | set | get | has | delete |
+Policy/Method | set | get | has | delete | Key Management | Data Management
 --- | --- | --- | --- | ---
-FIFO | O(1) | O(1) | O(1) | O(1)
-LIFO | O(1) | O(1) | O(1) | O(1)
-LRU | O(1) | O(1) | O(1) | O(1)
-MRU | O(1) | O(1) | O(1) | O(1)
-LFU | O(1) | O(1) | O(1) | O(1)
-MFU | O(1) | O(1) | O(1) | O(1)
-RR | O(1) | O(1) | O(1) | O(1)
+FIFO | O(1) | O(1) | O(1) | O(1) | Map + Double Linked List | memory-cache
+LIFO | O(1) | O(1) | O(1) | O(1) | Map + Double Linked List | memory-cache
+LRU | O(1) | O(1) | O(1) | O(1) | Map + Double Linked List | memory-cache
+MRU | O(1) | O(1) | O(1) | O(1) | Map + Double Linked List | memory-cache
+LFU | O(1) | O(1) | O(1) | O(1) | Map + 2 Double Linked List | *incorporated*
+MFU | O(1) | O(1) | O(1) | O(1) | Map + 2 Double Linked List | *incorporated*
+RR | O(N) | O(1) | O(1) | O(N) | Array + Map(key, index) |  memory-cache
 
-
+Key Management datastructure only use keys to do their jobs.
+Only for LFU/MFU with our custom datastructure, the Map also store the value
 
 ## Install
 `npm install --save cache-replacement`
@@ -98,6 +101,15 @@ class Cache {
    * @return {Number}
    */
   size() {
+    throw new Error('Size method not implemented');
+  }
+
+  /**
+   * Iterate on all element
+   * @param  {Function} fn a callback returning (k, v) couple
+   * @return {void}
+   */
+  forEach (fn) {
     throw new Error('Size method not implemented');
   }
 }

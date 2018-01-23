@@ -74,4 +74,16 @@ module.exports = class NodeCacheWrapper {
   size () {
     return this.memorycache.size()
   }
+
+  /**
+   * Iterate on all element
+   * @param  {Function} fn a callback returning (k, v) couple
+   * @return {void}
+   */
+  forEach (fn) {
+    const keys = this.memorycache.keys()
+    keys.forEach(key => {
+      fn(key, this.memorycache.get(key))
+    })
+  }
 }
