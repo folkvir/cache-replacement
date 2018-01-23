@@ -1,6 +1,5 @@
 const FIFOQueue = require('../utils/map-double-linked-list')
 const NodeCache = require('../default-cache/memory-cache')
-const debug = require('debug')('fifo')
 
 module.exports = class FIFOPolicy extends NodeCache {
   constructor (options = {max: Infinity}) {
