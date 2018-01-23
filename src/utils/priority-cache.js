@@ -33,6 +33,13 @@ module.exports = class WeightedQueue {
   get size () { return this.length }
 
   /**
+   * Just an alias to .delete method
+   */
+  del (key) {
+    return this.delete(key)
+  }
+
+  /**
    * Delete a entry in our cache
    * @param  {Object} key the key we want to delete
    * @return {Boolean}     return true when deleted otherwise false if the key does not exist
