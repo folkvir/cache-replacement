@@ -51,7 +51,10 @@ module.exports = class WeightedQueue {
     const weightedQueue = val.weightedQueue
     const element = val.element
     weightedQueue.value.queue.remove(element.node)
-    if (weightedQueue.value.queue.length === 0) this._history.remove(weightedQueue)
+    if (weightedQueue.value.queue.length === 0) {
+      this._history.remove(weightedQueue)
+    }
+      
     element.prev.link(element.next)
     if (this._lastNode.node.value === key) {
       this._lastNode = this._lastNode.prev
@@ -90,7 +93,7 @@ module.exports = class WeightedQueue {
     }
     // if the old weightedQueue is empty, delete it
     if (weightedQueue.value.queue.length === 0) this._history.remove(weightedQueue)
-
+    if (nextWeightedQueue.value.weight !== val.weightedQueue.value.weight + 1) throw new Error('impossible, please report !')
     // set the weighted queue of the element
     val.weightedQueue = nextWeightedQueue
     element.node = nextWeightedQueue.value.queue.push(key)
@@ -145,7 +148,7 @@ module.exports = class WeightedQueue {
 
       this._nodes.set(key, val)
     } else {
-      // delete the element and set this element to its new value priority === 1
+      debug('** Update, delete then set')
       this.delete(key)
       return this.set(key, value)
     }
@@ -239,6 +242,7 @@ module.exports = class WeightedQueue {
    * @private
    */
   _insertWeightedAfter (node, place) {
+    debug('[insertweightedafter]')
     const placeNext = place.next
     place.link(node)
     node.link(placeNext)
@@ -259,6 +263,7 @@ module.exports = class WeightedQueue {
       }
     }
     const node = new Node(this._history, value)
+    this._history.length++
     node.prev = prev
     node.next = next
     return node
@@ -269,6 +274,7 @@ module.exports = class WeightedQueue {
    * Set the node as the tail
    */
   _bumpHead (element) {
+    debug('[bump] element: ', element.node.value)
     const prev = element.prev
     const next = element.next
     prev.link(next)
