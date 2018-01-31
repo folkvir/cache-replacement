@@ -36,7 +36,7 @@ describe('Testing the LFU policy', function () {
     const r3 = cache.get('toto')
     assert.deepEqual(r2, undefined)
     assert.deepEqual(r3, 43)
-    assert.deepEqual(cache.size, 1)
+    assert.deepEqual(cache.size(), 1)
   })
   it('should re-set the same variable correctly instead of deleting it (cache size = 1)', function () {
     let cache = new Cache({max: 1})
@@ -44,7 +44,7 @@ describe('Testing the LFU policy', function () {
     cache.set('titi', 43)
     const r2 = cache.get('titi')
     assert.deepEqual(r2, 43)
-    assert.deepEqual(cache.size, 1)
+    assert.deepEqual(cache.size(), 1)
   })
   it('should correctly delete the least frequently used element [method get] (cache size =2)', function () {
     let cache = new Cache({max: 2})
@@ -60,7 +60,7 @@ describe('Testing the LFU policy', function () {
     print(cache)
     assert.equal(cache.leastFrequent.key, 'tata', 'least frequent tata')
     assert.equal(cache.mostFrequent.key, 'titi', 'most frequent titi')
-    assert.deepEqual(cache.size, 2)
+    assert.deepEqual(cache.size(), 2)
   })
   it('should not increase frequency with method has (cache size =2)', function () {
     let cache = new Cache({max: 2})
@@ -69,7 +69,7 @@ describe('Testing the LFU policy', function () {
     assert.equal(cache.leastFrequent.key, 'titi', 'least frequent toto')
     cache.has('titi')
     assert.equal(cache.leastFrequent.key, 'titi', 'least frequent toto')
-    assert.deepEqual(cache.size, 2)
+    assert.deepEqual(cache.size(), 2)
   })
   it('should correctly delete the least frequently used element [method set] (cache size =3)', function () {
     let cache = new Cache({max: 3})
@@ -93,6 +93,6 @@ describe('Testing the LFU policy', function () {
     cache.set('tutu', "Qu'est-ce qu'un élémentaire de fromage ? un emmental !")
     assert.deepEqual(cache.leastFrequent.key, 'titi')
     assert.deepEqual(cache.mostFrequent.key, 'tutu')
-    assert.deepEqual(cache.size, 3)
+    assert.deepEqual(cache.size(), 3)
   })
 })

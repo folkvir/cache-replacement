@@ -30,7 +30,7 @@ module.exports = class WeightedQueue {
    * Alias for .length
    * @return {Number}
    */
-  get size () { return this.length }
+  size () { return this.length }
 
   /**
    * Just an alias to .delete method
