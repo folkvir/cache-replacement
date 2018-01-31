@@ -95,4 +95,19 @@ describe('Testing the LFU policy', function () {
     assert.deepEqual(cache.mostFrequent.key, 'tutu')
     assert.deepEqual(cache.size(), 3)
   })
+  it('should correctly delete 1M elements (cache size =2)', function () {
+    this.timeout(10000)
+    let cache = new Cache({max: 2})
+    cache.set('titi', 0)
+    cache.set('toto', 1)
+    try {
+      for (let i = 2; i < 1000000 + 2; i++) {
+        cache.set(i, i)
+        // console.log(cache.leastFrequent.value)
+        assert.equal(cache.leastFrequent.value, i - 1)
+      }
+    } catch (e) {
+      throw e
+    }
+  })
 })
