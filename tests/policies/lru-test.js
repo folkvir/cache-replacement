@@ -127,4 +127,33 @@ describe('Testing the LRU policy', function () {
     assert.equal(list.size(), maxKey)
     done()
   })
+
+  it('should correctly react in async mode', function(done) {
+    this.timeout(5000)
+    async function insert(repeat, cache, event, limit) {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          // console.log('Size of the cache before the loop: ', cache.size())
+          for(let i =0; i<repeat;i++) {
+            cache.set(i, i)
+            assert.equal(cache.size(), limit)
+          }
+          event.emit('end')
+        }, Math.random() * 500)
+      })
+    }
+
+    const limit = 5
+    const end = 100
+    const repeat = 80
+    let event = new (require('events'))()
+    let res = 0
+    event.on('end', () => {
+      res++
+      if(res === end) done()
+    })
+    var cache = new Cache({max: limit})
+    for(let i =0; i<5; i++) cache.set(i, i)
+    for(let i =0; i<end; i++) insert(repeat, cache, event, limit)
+  })
 })

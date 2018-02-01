@@ -40,7 +40,7 @@ class LRUPolicy extends NodeCache {
 
   del (key) {
     const del = super.del(key)
-    del && this.keys.remove(this.keys.find(key))
+    del && this.keys.delete(key)
     return del
   }
 }
