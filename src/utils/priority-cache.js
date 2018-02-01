@@ -19,8 +19,17 @@ module.exports = class WeightedQueue {
     this._nodes = new Map()
     this._history = new FIFO()
     this._lastNode = undefined
+    this._hits = 0
+    this._misses = 0
   }
 
+  misses () {
+    return this._misses
+  }
+
+  hits () {
+    return this._hits
+  }
   /**
    * Get the length of the datastructure
    * @return {Number}
@@ -54,7 +63,7 @@ module.exports = class WeightedQueue {
     if (weightedQueue.value.queue.length === 0) {
       this._history.remove(weightedQueue)
     }
-      
+
     element.prev.link(element.next)
     if (this._lastNode.node.value === key) {
       this._lastNode = this._lastNode.prev
@@ -69,7 +78,11 @@ module.exports = class WeightedQueue {
    */
   get (key) {
     debug('Getting:', key)
-    if (!this._nodes.has(key)) return
+    if (!this._nodes.has(key)) {
+      this._misses++
+      return
+    }
+    this._hits++
     const val = this._nodes.get(key)
     const weightedQueue = val.weightedQueue
     const element = val.element

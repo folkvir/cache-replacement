@@ -4,7 +4,8 @@ const debug = require('debug')('memorycache')
 module.exports = class NodeCacheWrapper {
   constructor (options) {
     this.memorycache = new NodeCache()
-    // this.memorycache.debug(true);
+    this.hits = 0
+    this.misses = 0
   }
 
   /**
@@ -14,7 +15,13 @@ module.exports = class NodeCacheWrapper {
    */
   get (key) {
     debug('Getting key: ', key)
-    return this.memorycache.get(key)
+    const hit = this.memorycache.get(key)
+    if (hit) {
+      this.hits++
+    } else {
+      this.misses++
+    }
+    return hit
   }
 
   /**
@@ -85,5 +92,13 @@ module.exports = class NodeCacheWrapper {
     keys.forEach(key => {
       fn(key, this.memorycache.get(key))
     })
+  }
+
+  hits () {
+    return this.hits
+  }
+
+  misses () {
+    return this.hits
   }
 }
