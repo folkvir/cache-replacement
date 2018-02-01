@@ -1,5 +1,5 @@
 const MRUQueue = require('../utils/map-double-linked-list')
-const NodeCache = require('../default-cache/memory-cache')
+const NodeCache = require('../default-cache/cache')
 
 module.exports = class MRUPolicy extends NodeCache {
   constructor (options = {max: Infinity}) {

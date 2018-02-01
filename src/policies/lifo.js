@@ -1,5 +1,5 @@
 const LIFOQueue = require('../utils/map-double-linked-list')
-const NodeCache = require('../default-cache/memory-cache')
+const NodeCache = require('../default-cache/cache')
 const debug = require('debug')('lifo')
 
 module.exports = class LIFOPolicy extends NodeCache {

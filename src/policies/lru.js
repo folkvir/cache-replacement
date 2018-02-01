@@ -1,6 +1,5 @@
-
 const LRUQueue = require('../utils/map-double-linked-list')
-const NodeCache = require('../default-cache/memory-cache')
+const NodeCache = require('../default-cache/cache')
 
 class LRUPolicy extends NodeCache {
   constructor (options = {max: Infinity}) {
@@ -30,7 +29,8 @@ class LRUPolicy extends NodeCache {
       const node = this.keys.find(key)
       this.keys.bump(node)
     }
-    return super.set(key, value)
+    const res = super.set(key, value)
+    return res
   }
 
   clear () {

@@ -1,4 +1,4 @@
-const NodeCache = require('../default-cache/memory-cache')
+const NodeCache = require('../default-cache/cache')
 
 module.exports = class FIFOPolicy extends NodeCache {
   constructor (options = {max: Infinity}) {
@@ -10,17 +10,16 @@ module.exports = class FIFOPolicy extends NodeCache {
 
   set (key, value) {
     const already = this.has(key)
-    const res = super.set(key, value)
-    if (res && !already) {
-      const max = this.max
-      const size = this._array.length
-      if (size >= max) {
-        this._randomreplacement()
-      }
+    const max = this.max
+    const size = this._array.length
+    if (size >= max) {
+      this._randomreplacement()
+    }
+    if (!already) {
       this._array.push(key)
       this._correspondingKeys.set(key, this._array.length - 1)
     }
-    return res
+    return super.set(key, value)
   }
 
   del (key) {

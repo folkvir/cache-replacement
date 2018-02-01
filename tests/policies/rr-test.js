@@ -13,7 +13,7 @@ describe('Testing the RR policy', function () {
     assert.equal(cache._array.length, 5)
     assert.equal(cache._correspondingKeys.size, 5)
     cache.del('c')
-    cache.forEach((k, v) => {
+    cache.forEach((v, k) => {
       assert.equal(cache._array.includes(k), true)
     })
     assert.equal(cache.size(), 4)

@@ -104,8 +104,27 @@ describe('Testing the LRU policy', function () {
   it('should correctly call foreach', function () {
     let cache = new Cache()
     cache.set('toto')
-    cache.forEach(e => {
-      assert.equal(e, 'toto')
+    cache.forEach((v, k) => {
+      assert.equal(k, 'toto')
     })
+  })
+  it('should correctly react with 1000 elements in [1, 10]', function (done) {
+    this.timeout(50000)
+    const maxi = 1000
+    const maxKey = 10
+    function pick () {
+      return Math.floor(Math.random() * maxKey + 1)
+    }
+    let list = new Cache({max: maxKey})
+    for (let i = 0; i < maxi; ++i) {
+      const p = pick()
+      if (list.has(p)) {
+        list.get(p)
+      } else {
+        list.set(p, p)
+      }
+    }
+    assert.equal(list.size(), maxKey)
+    done()
   })
 })
