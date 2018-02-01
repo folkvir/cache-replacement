@@ -10,7 +10,7 @@ const setm = (arr, queue) => {
     }
   })
 }
-function getHistorySize(list) {
+function getHistorySize (list) {
   let a = 0
   list.forEachWeight(e => {
     a++
@@ -23,6 +23,19 @@ describe('Priority Cache', function () {
     it('should return no error during the creation of the list', function () {
       let list = new PriorityCache()
       assert.notEqual(list, undefined)
+    })
+    it('hits function', function () {
+      const a = new PriorityCache()
+      a.set('toto', 4)
+      a.get('toto')
+      assert.equal(a.hits(), 1)
+    })
+    it('hits function', function () {
+      const a = new PriorityCache()
+      a.set('toto', 4)
+      a.get('titi')
+      assert.equal(a.misses(), 1)
+      assert.equal(a.hits(), 0)
     })
   })
   describe('Behavior', function () {
@@ -259,28 +272,28 @@ describe('Priority Cache', function () {
       this.timeout(50000)
       const max = 100000
       const maxKey = 10
-      function pick() {
+      function pick () {
         return Math.floor(Math.random() * maxKey + 1)
       }
       let list = new PriorityCache()
       for (let i = 0; i < max; ++i) {
         const p = pick()
-        if(list.has(p)) {
+        if (list.has(p)) {
           list.get(p)
         } else {
           list.set(p, p)
         }
-        if(!list.mostFrequent) {
+        if (!list.mostFrequent) {
           list.forEachWeight(e => {
             console.log(e.weight, e.array, e.queue)
           })
           console.log('history length: ', list._history.length)
           console.log('MFU not correctly set')
         }
-        if(!list.leastFrequent) console.log('LFU not correctly set')
-        if(!list.mostRecentlyUsed) console.log('MRU not correctly set')
-        if(!list.lastRecentlyUsed) console.log('LRU not correctly set')
-        if(!list._lastNode) console.log('_lastNode not set, report !')
+        if (!list.leastFrequent) console.log('LFU not correctly set')
+        if (!list.mostRecentlyUsed) console.log('MRU not correctly set')
+        if (!list.lastRecentlyUsed) console.log('LRU not correctly set')
+        if (!list._lastNode) console.log('_lastNode not set, report !')
         // console.log(`ELEMENT: (${p}) MFU: ${list.mostFrequent.key}, LFU: ${list.leastFrequent.key}, LRU: ${list.lastRecentlyUsed.key}, MRU: ${list.mostRecentlyUsed.key}, FLENGTH: ${list._history.length} ${getHistorySize(list)}`)
         assert.notEqual(list.mostFrequent, undefined)
         assert.notEqual(list.leastFrequent, undefined)

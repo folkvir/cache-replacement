@@ -13,4 +13,17 @@ describe('Memory cache wrapper', function () {
     assert.equal(a.get('toto'), undefined)
     assert.equal(a.size(), 0)
   })
+  it('hits function', function () {
+    const a = new Memcache()
+    a.set('toto', 4)
+    a.get('toto')
+    assert.equal(a.hits(), 1)
+  })
+  it('misses function', function () {
+    const a = new Memcache()
+    a.set('toto', 4)
+    a.get('titi')
+    assert.equal(a.misses(), 1)
+    assert.equal(a.hits(), 0)
+  })
 })

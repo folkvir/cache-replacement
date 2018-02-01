@@ -2,7 +2,7 @@
 const LRUQueue = require('../utils/map-double-linked-list')
 const NodeCache = require('../default-cache/memory-cache')
 
-module.exports = class LRUPolicy extends NodeCache {
+class LRUPolicy extends NodeCache {
   constructor (options = {max: Infinity}) {
     super(options)
     this.keys = new LRUQueue()
@@ -46,3 +46,5 @@ module.exports = class LRUPolicy extends NodeCache {
     return del
   }
 }
+
+module.exports = LRUPolicy

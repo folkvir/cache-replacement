@@ -4,8 +4,8 @@ const debug = require('debug')('memorycache')
 module.exports = class NodeCacheWrapper {
   constructor (options) {
     this.memorycache = new NodeCache()
-    this.hits = 0
-    this.misses = 0
+    this._hits = 0
+    this._misses = 0
   }
 
   /**
@@ -17,9 +17,9 @@ module.exports = class NodeCacheWrapper {
     debug('Getting key: ', key)
     const hit = this.memorycache.get(key)
     if (hit) {
-      this.hits++
+      this._hits++
     } else {
-      this.misses++
+      this._misses++
     }
     return hit
   }
@@ -95,10 +95,10 @@ module.exports = class NodeCacheWrapper {
   }
 
   hits () {
-    return this.hits
+    return this._hits
   }
 
   misses () {
-    return this.hits
+    return this._misses
   }
 }

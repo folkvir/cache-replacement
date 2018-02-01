@@ -101,4 +101,11 @@ describe('Testing the LRU policy', function () {
     assert.deepEqual(cache.keys.first(), 'tata')
     assert.deepEqual(cache.size(), 3)
   })
+  it('should correctly call foreach', function () {
+    let cache = new Cache()
+    cache.set('toto')
+    cache.forEach(e => {
+      assert.equal(e, 'toto')
+    })
+  })
 })
