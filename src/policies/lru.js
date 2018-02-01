@@ -19,20 +19,18 @@ class LRUPolicy extends NodeCache {
   }
 
   set (key, value) {
-    const res = super.set(key, value)
-    if (res && !this.keys._map.has(key)) {
-      const max = this.max
-      const size = this.keys.length
-      if (size >= max) {
-        const oldKey = this.keys.shift()
-        if (oldKey !== key) this.del(oldKey)
-      }
+    const max = this.max
+    const size = this.keys.length
+    if (size >= max) {
+      this.del(this.keys.shift())
+    }
+    if (!this.keys._map.has(key)) {
       this.keys.push(key)
     } else {
       const node = this.keys.find(key)
       this.keys.bump(node)
     }
-    return res
+    return super.set(key, value)
   }
 
   clear () {
