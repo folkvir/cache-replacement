@@ -1,19 +1,16 @@
-const LRUQueue = require('../utils/map-double-linked-list')
+const MDLL = require('../utils/map-double-linked-list')
 const NodeCache = require('../default-cache/cache')
 
 class LRUPolicy extends NodeCache {
   constructor (options = {max: Infinity}) {
     super(options)
-    this.keys = new LRUQueue()
+    this.keys = new MDLL()
     this.max = options.max
   }
 
   get (key) {
     const res = super.get(key)
-    if (res) {
-      const node = this.keys.find(key)
-      this.keys.bump(node)
-    }
+    if (res) this.keys.bump(key)
     return res
   }
 
@@ -23,11 +20,10 @@ class LRUPolicy extends NodeCache {
     if (size >= max) {
       this.del(this.keys.shift())
     }
-    if (!this.keys._map.has(key)) {
+    if (!this.keys.has(key)) {
       this.keys.push(key)
     } else {
-      const node = this.keys.find(key)
-      this.keys.bump(node)
+      this.keys.bump(key)
     }
     const res = super.set(key, value)
     return res

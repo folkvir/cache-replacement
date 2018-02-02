@@ -1,36 +1,31 @@
-const MRUQueue = require('../utils/map-double-linked-list')
+const MDLL = require('../utils/map-double-linked-list')
 const NodeCache = require('../default-cache/cache')
 
 module.exports = class MRUPolicy extends NodeCache {
   constructor (options = {max: Infinity}) {
     super(options)
-    this.keys = new MRUQueue()
+    this.keys = new MDLL()
     this.max = options.max
   }
 
   get (key) {
     const res = super.get(key)
-    if (res) {
-      const node = this.keys.find(key)
-      this.keys.bump(node)
-    }
+    if (res) this.keys.bump(key)
     return res
   }
 
   set (key, value) {
-    const res = super.set(key, value)
-    if (res && !this.keys._map.has(key)) {
-      const max = this.max
-      const size = this.keys.length
-      if (size >= max) {
-        const oldKey = this.keys.pop()
-        if (oldKey !== key) this.del(oldKey)
-      }
+    const max = this.max
+    const size = this.keys.length
+    if (size >= max) {
+      this.del(this.keys.pop())
+    }
+    if (!this.keys.has(key)) {
       this.keys.push(key)
     } else {
-      const node = this.keys.find(key)
-      this.keys.bump(node)
+      this.keys.bump(key)
     }
+    const res = super.set(key, value)
     return res
   }
 
@@ -41,7 +36,7 @@ module.exports = class MRUPolicy extends NodeCache {
 
   del (key) {
     const del = super.del(key)
-    del && this.keys.remove(this.keys.find(key))
+    del && this.keys.delete(key)
     return del
   }
 }

@@ -10,18 +10,15 @@ module.exports = class LIFOPolicy extends NodeCache {
   }
 
   set (key, value) {
-    const res = super.set(key, value)
-    if (res && !this.keys._map.has(key)) {
-      const max = this.max
-      const size = this.keys.length
-      if (size >= max) {
-        const oldKey = this.keys.pop()
-        if (oldKey !== key) this.del(oldKey)
-      }
-      this.keys.push(key)
-    } else {
-      // noop, just set the variable in the cache
+    const max = this.max
+    const size = this.keys.length
+    if (size >= max) {
+      this.del(this.keys.pop())
     }
+    if (!this.keys.has(key)) {
+      this.keys.push(key)
+    }
+    const res = super.set(key, value)
     return res
   }
 
@@ -32,7 +29,7 @@ module.exports = class LIFOPolicy extends NodeCache {
 
   del (key) {
     const del = super.del(key)
-    del && this.keys.remove(this.keys.find(key))
+    del && this.keys.delete(key)
     return del
   }
 }

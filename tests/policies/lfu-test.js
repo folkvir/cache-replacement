@@ -80,6 +80,8 @@ describe('Testing the LFU policy', function () {
     assert.equal(r1, true)
     cache.set('titi', 56)
     assert.deepEqual(cache.leastFrequent.key, 'toto')
+    assert.deepEqual(cache.mostFrequent.key, 'titi')
+    assert.deepEqual(cache.leastFrequent.key, 'toto')
     const r3 = cache.set('tata', 44)
     assert.equal(r3, true)
     assert.deepEqual(cache.leastFrequent.key, 'toto')
@@ -113,28 +115,28 @@ describe('Testing the LFU policy', function () {
   it('should correctly react with 100 000 elements in [1, 10] (size = 5)', function (done) {
     this.timeout(50000)
     const max = 100000
-    function pick() {
+    function pick () {
       return Math.floor(Math.random() * 10 + 1)
     }
     let list = new Cache({max: 5})
     for (let i = 0; i < max; ++i) {
       const p = pick()
-      if(list.has(p)) {
+      if (list.has(p)) {
         list.get(p)
       } else {
         list.set(p, p)
       }
-      if(!list.mostFrequent) {
+      if (!list.mostFrequent) {
         list.forEachWeight(e => {
           console.log(e.weight, e.array, e.queue)
         })
         console.log('history length: ', list._history.length)
         console.log('MFU not correctly set')
       }
-      if(!list.leastFrequent) console.log('LFU not correctly set')
-      if(!list.mostRecentlyUsed) console.log('MRU not correctly set')
-      if(!list.lastRecentlyUsed) console.log('LRU not correctly set')
-      if(!list._lastNode) console.log('_lastNode not set, report !')
+      if (!list.leastFrequent) console.log('LFU not correctly set')
+      if (!list.mostRecentlyUsed) console.log('MRU not correctly set')
+      if (!list.lastRecentlyUsed) console.log('LRU not correctly set')
+      if (!list._lastNode) console.log('_lastNode not set, report !')
       // console.log(`ELEMENT: (${p}) MFU: ${list.mostFrequent.key}, LFU: ${list.leastFrequent.key}, LRU: ${list.lastRecentlyUsed.key}, MRU: ${list.mostRecentlyUsed.key}, FLENGTH: ${list._history.length} ${getHistorySize(list)}`)
       assert.notEqual(list.mostFrequent, undefined)
       assert.notEqual(list.leastFrequent, undefined)
