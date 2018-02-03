@@ -114,9 +114,9 @@ describe('Testing the LFU policy', function () {
   })
   it('should correctly react with 100 000 elements in [1, 10] (size = 5)', function (done) {
     this.timeout(50000)
-    const max = 100000
+    const max = 100
     function pick () {
-      return Math.floor(Math.random() * 10 + 1)
+      return Math.floor(Math.random() * 6 + 1)
     }
     let list = new Cache({max: 5})
     for (let i = 0; i < max; ++i) {
@@ -126,18 +126,6 @@ describe('Testing the LFU policy', function () {
       } else {
         list.set(p, p)
       }
-      if (!list.mostFrequent) {
-        list.forEachWeight(e => {
-          console.log(e.weight, e.array, e.queue)
-        })
-        console.log('history length: ', list._history.length)
-        console.log('MFU not correctly set')
-      }
-      if (!list.leastFrequent) console.log('LFU not correctly set')
-      if (!list.mostRecentlyUsed) console.log('MRU not correctly set')
-      if (!list.lastRecentlyUsed) console.log('LRU not correctly set')
-      if (!list._lastNode) console.log('_lastNode not set, report !')
-      // console.log(`ELEMENT: (${p}) MFU: ${list.mostFrequent.key}, LFU: ${list.leastFrequent.key}, LRU: ${list.lastRecentlyUsed.key}, MRU: ${list.mostRecentlyUsed.key}, FLENGTH: ${list._history.length} ${getHistorySize(list)}`)
       assert.notEqual(list.mostFrequent, undefined)
       assert.notEqual(list.leastFrequent, undefined)
       assert.notEqual(list.mostRecentlyUsed, undefined)

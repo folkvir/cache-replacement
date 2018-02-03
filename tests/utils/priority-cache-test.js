@@ -19,7 +19,7 @@ function getHistorySize (list) {
 }
 
 describe('Priority Cache', function () {
-  describe('Creation of the list', function () {
+  describe('Creation of the list and functions', function () {
     it('should return no error during the creation of the list', function () {
       let list = new PriorityCache()
       assert.notEqual(list, undefined)
@@ -30,12 +30,39 @@ describe('Priority Cache', function () {
       a.get('toto')
       assert.equal(a.hits(), 1)
     })
-    it('hits function', function () {
+    it('misses function', function () {
       const a = new PriorityCache()
       a.set('toto', 4)
       a.get('titi')
       assert.equal(a.misses(), 1)
-      assert.equal(a.hits(), 0)
+    })
+    it('forEach function', function () {
+      const a = new PriorityCache()
+      a.set('toto', 4)
+      a.set('titi', 4)
+      a.set('tata', 4)
+      a.forEach((k, v) => {
+        assert.equal(v, 4)
+      })
+    })
+    it('forEachWeight function', function () {
+      const a = new PriorityCache()
+      a.set('toto', 4)
+      a.set('titi', 4)
+      a.set('tata', 4)
+      a.forEachWeight((elem) => {
+        assert.equal(elem.weight, 1)
+        assert.equal(elem.array.length, 3)
+      })
+    })
+    it('forEachRecency function', function () {
+      const a = new PriorityCache()
+      a.set('toto', 4)
+      a.set('titi', 4)
+      a.set('tata', 4)
+      a.forEachRecency((elem) => {
+        console.log(elem)
+      })
     })
   })
   describe('Behavior', function () {
@@ -283,18 +310,6 @@ describe('Priority Cache', function () {
         } else {
           list.set(p, p)
         }
-        if (!list.mostFrequent) {
-          list.forEachWeight(e => {
-            console.log(e.weight, e.array, e.queue)
-          })
-          console.log('history length: ', list._history.length)
-          console.log('MFU not correctly set')
-        }
-        if (!list.leastFrequent) console.log('LFU not correctly set')
-        if (!list.mostRecentlyUsed) console.log('MRU not correctly set')
-        if (!list.lastRecentlyUsed) console.log('LRU not correctly set')
-        if (!list._lastNode) console.log('_lastNode not set, report !')
-        // console.log(`ELEMENT: (${p}) MFU: ${list.mostFrequent.key}, LFU: ${list.leastFrequent.key}, LRU: ${list.lastRecentlyUsed.key}, MRU: ${list.mostRecentlyUsed.key}, FLENGTH: ${list._history.length} ${getHistorySize(list)}`)
         assert.notEqual(list.mostFrequent, undefined)
         assert.notEqual(list.leastFrequent, undefined)
         assert.notEqual(list.mostRecentlyUsed, undefined)
@@ -303,15 +318,69 @@ describe('Priority Cache', function () {
       assert.equal(list.length, maxKey)
       done()
     })
-    // it('should correctly react with 100 000 000 elements', function (done) {
-    //   this.timeout(50000)
-    //   const max = 100000000
-    //   let list = new PriorityCache()
-    //   for (let i = 0; i < max; ++i) {
-    //     list.set(i, Math.random() * max)
-    //   }
-    //   assert(list.length, max)
-    //   done()
-    // })
+    it('should pass all specific deletion tests', function (done) {
+      this.timeout(50000)
+      const max = 100
+      const maxKey = 10
+      function pick () {
+        return Math.floor(Math.random() * maxKey + 1)
+      }
+      let list = new PriorityCache()
+      for (let i = 0; i < max; ++i) {
+        const p = pick()
+        if (list.has(p)) {
+          list.get(p)
+        } else {
+          list.set(p, p)
+        }
+        assert.notEqual(list.mostFrequent, undefined)
+        assert.notEqual(list.leastFrequent, undefined)
+        assert.notEqual(list.mostRecentlyUsed, undefined)
+        assert.notEqual(list.lastRecentlyUsed, undefined)
+      }
+      assert.equal(list.length, maxKey)
+
+      // first of first element leastFrequent
+      let size = list.size()
+      let key2del = list._history.first().queue.first()
+      list.del(key2del)
+      assert.notEqual(list.mostFrequent, undefined)
+      assert.notEqual(list.leastFrequent, undefined)
+      assert.notEqual(list.mostRecentlyUsed, undefined)
+      assert.notEqual(list.lastRecentlyUsed, undefined)
+      assert.equal(list.size(), size - 1)
+
+      // last of first element
+      size = list.size()
+      key2del = list._history.first().queue.last()
+      list.del(key2del)
+      assert.notEqual(list.mostFrequent, undefined)
+      assert.notEqual(list.leastFrequent, undefined)
+      assert.notEqual(list.mostRecentlyUsed, undefined)
+      assert.notEqual(list.lastRecentlyUsed, undefined)
+      assert.equal(list.size(), size - 1)
+
+      // first of last element
+      size = list.size()
+      key2del = list._history.last().queue.first()
+      list.del(key2del)
+      assert.notEqual(list.mostFrequent, undefined)
+      assert.notEqual(list.leastFrequent, undefined)
+      assert.notEqual(list.mostRecentlyUsed, undefined)
+      assert.notEqual(list.lastRecentlyUsed, undefined)
+      assert.equal(list.size(), size - 1)
+
+      // last of last element
+      size = list.size()
+      key2del = list._history.last().queue.last()
+      list.del(key2del)
+      assert.notEqual(list.mostFrequent, undefined)
+      assert.notEqual(list.leastFrequent, undefined)
+      assert.notEqual(list.mostRecentlyUsed, undefined)
+      assert.notEqual(list.lastRecentlyUsed, undefined)
+      assert.equal(list.size(), size - 1)
+
+      done()
+    })
   })
 })
