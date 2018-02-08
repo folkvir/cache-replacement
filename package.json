@@ -44,5 +44,8 @@
       "it",
       "before"
     ]
-  }
+  },
+  "pre-commit": [
+    "test"
+  ]
 }

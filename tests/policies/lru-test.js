@@ -72,33 +72,33 @@ describe('Testing the LRU policy', function () {
     let cache = new Cache({max: 3})
     cache.set('titi', 42)
     print(cache)
-    assert.deepEqual(cache.keys.last(), 'titi')
+    assert.deepEqual(cache._keys.last(), 'titi')
     const r1 = cache.set('toto', 43)
     print(cache)
-    assert.deepEqual(cache.keys.last(), 'toto')
+    assert.deepEqual(cache._keys.last(), 'toto')
     assert.equal(r1, true)
     const r2 = cache.set('titi', 56)
     print(cache)
-    assert.deepEqual(cache.keys.last(), 'titi')
-    assert.deepEqual(cache.keys.first(), 'toto')
+    assert.deepEqual(cache._keys.last(), 'titi')
+    assert.deepEqual(cache._keys.first(), 'toto')
     assert.equal(r2, true)
     const r3 = cache.set('tata', 44)
     assert.equal(r3, true)
     print(cache)
-    assert.deepEqual(cache.keys.last(), 'tata')
-    assert.deepEqual(cache.keys.first(), 'toto')
+    assert.deepEqual(cache._keys.last(), 'tata')
+    assert.deepEqual(cache._keys.first(), 'toto')
     cache.set('tutu', "Qu'est-ce qu'un élémentaire de fromage ? un emmental !")
     // now we have toto => titi => tata => tutu
     print(cache)
-    assert.deepEqual(cache.keys.last(), 'tutu')
-    assert.deepEqual(cache.keys.first(), 'titi')
+    assert.deepEqual(cache._keys.last(), 'tutu')
+    assert.deepEqual(cache._keys.first(), 'titi')
     // now we have toto => titi => tata => tutu
     print(cache)
     const r5 = cache.get('titi')
     assert.deepEqual(r5, 56)
     // now we have toto => tata => tutu => titi
-    assert.deepEqual(cache.keys.last(), 'titi')
-    assert.deepEqual(cache.keys.first(), 'tata')
+    assert.deepEqual(cache._keys.last(), 'titi')
+    assert.deepEqual(cache._keys.first(), 'tata')
     assert.deepEqual(cache.size(), 3)
   })
   it('should correctly call foreach', function () {
@@ -128,13 +128,13 @@ describe('Testing the LRU policy', function () {
     done()
   })
 
-  it('should correctly react in async mode', function(done) {
+  it('should correctly react in async mode', function (done) {
     this.timeout(5000)
-    async function insert(repeat, cache, event, limit) {
+    async function insert (repeat, cache, event, limit) {
       return new Promise((resolve, reject) => {
         setTimeout(() => {
           // console.log('Size of the cache before the loop: ', cache.size())
-          for(let i =0; i<repeat;i++) {
+          for (let i = 0; i < repeat; i++) {
             cache.set(i, i)
             assert.equal(cache.size(), limit)
           }
@@ -150,10 +150,10 @@ describe('Testing the LRU policy', function () {
     let res = 0
     event.on('end', () => {
       res++
-      if(res === end) done()
+      if (res === end) done()
     })
     var cache = new Cache({max: limit})
-    for(let i =0; i<5; i++) cache.set(i, i)
-    for(let i =0; i<end; i++) insert(repeat, cache, event, limit)
+    for (let i = 0; i < 5; i++) cache.set(i, i)
+    for (let i = 0; i < end; i++) insert(repeat, cache, event, limit)
   })
 })
