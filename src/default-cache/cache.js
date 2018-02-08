@@ -1,4 +1,4 @@
-module.exports = class NodeCacheWrapper {
+class NodeCacheWrapper {
   constructor (options) {
     this.memorycache = new Map()
     this._hits = 0
@@ -91,4 +91,29 @@ module.exports = class NodeCacheWrapper {
   misses () {
     return this._misses
   }
+
+  keys () {
+    return this._getArrayFromIt(this.memorycache.keys())
+  }
+
+  values () {
+    return this._getArrayFromIt(this.memorycache.values())
+  }
+
+  _getArrayFromIt (iterator) {
+    let elem = iterator.next().value
+    let res = []
+    while (elem !== null && elem !== undefined) {
+      res.push(elem)
+      elem = iterator.next().value
+    }
+    return res
+  }
 }
+
+module.exports = NodeCacheWrapper
+
+// const a = new NodeCacheWrapper()
+// a.set('toto', 4)
+// a.set('titi', 5)
+// console.log(a.keys(), a.values())

@@ -23,6 +23,14 @@ module.exports = class WeightedQueue {
     this._misses = 0
   }
 
+  keys () {
+    return this._getArrayFromIt(this._nodes.keys())
+  }
+
+  values () {
+    return this._getArrayFromIt(this._nodes.values())
+  }
+
   misses () {
     return this._misses
   }
@@ -276,5 +284,18 @@ module.exports = class WeightedQueue {
    */
   _createWeightedFifo (weight) {
     return { weight, queue: new FIFO() }
+  }
+
+  /**
+   * @private
+   */
+  _getArrayFromIt (iterator) {
+    let elem = iterator.next().value
+    let res = []
+    while (elem !== null && elem !== undefined) {
+      res.push(elem)
+      elem = iterator.next().value
+    }
+    return res
   }
 }
