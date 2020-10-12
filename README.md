@@ -2,9 +2,9 @@
 
 ![Keep Calm and Clear Cache](./src/utils/images/kccc.png)
 
-Do you want a specific in-memory cache ? With a specific replacement policy ? This is the right place.
+Do you want a specific in-memory cache with get access in O(1) ? With a specific replacement policy ? This is the right place.
 
-**Motivation:** Always provide fast access to data with a specific replacement policy
+**Motivation:** Provide fast access (get in O(1)) to data with a specific replacement policy
 
 By default we implemented some replacement policies:
 * **FIFO**: First In First Out, the first value cached is replaced.
@@ -12,23 +12,23 @@ By default we implemented some replacement policies:
 * **LRU**: Last Recently Used, the last recently used value cached is replaced.
 * **LFU**: Least Frequently Used, the least frequently used value is replaced
 * **MRU**: Most Recently Used, The most recently used value is replaced.
-* **MFU**: Most Frequently Used, the most frequently used calue is replaced.
+* **MFU**: Most Frequently Used, the most frequently used value is replaced.
 * **RR**: Random Replacement in the cache.
 
 **Complexity in the worst case (best case is almost always O(1)):**
 
 Policy/Method | set | get | has | delete | Key Management | Data Management
---- | --- | --- | --- | ---
-FIFO | O(1) | O(1) | O(1) | O(1) | Map + Double Linked List | memory-cache
-LIFO | O(1) | O(1) | O(1) | O(1) | Map + Double Linked List | memory-cache
-LRU | O(1) | O(1) | O(1) | O(1) | Map + Double Linked List | memory-cache
-MRU | O(1) | O(1) | O(1) | O(1) | Map + Double Linked List | memory-cache
-LFU | O(1) | O(1) | O(1) | O(1) | Map + 2 Double Linked List | *incorporated*
-MFU | O(1) | O(1) | O(1) | O(1) | Map + 2 Double Linked List | *incorporated*
-RR | O(N) | O(1) | O(1) | O(N) | Array + Map(key, index) |  memory-cache
+--- | --- | --- | --- | --- | --- | ---
+FIFO | O(1) | O(1) | O(1) | O(1) | Map + Double Linked List | `memory-cache`
+LIFO | O(1) | O(1) | O(1) | O(1) | Map + Double Linked List | `memory-cache`
+LRU | O(1) | O(1) | O(1) | O(1) | Map + Double Linked List | `memory-cache`
+MRU | O(1) | O(1) | O(1) | O(1) | Map + Double Linked List | `memory-cache`
+LFU | O(1) | O(1) | O(1) | O(1) | Map + 2 Double Linked List | *local*
+MFU | O(1) | O(1) | O(1) | O(1) | Map + 2 Double Linked List | *local*
+RR | O(N) | O(1) | O(1) | O(N) | Array + Map(key, index) |  `memory-cache`
 
 Key Management datastructure only use keys to do their jobs.
-Only for LFU/MFU with our custom datastructure, the Map also store the value
+For LFU/MFU the Map also stores the value
 
 ## Install
 `npm install --save cache-replacement`
@@ -121,31 +121,3 @@ git clone https://github.com/folkvir/cache-replacement.js
 npm install
 npm test
 ```
-
-## Specific tests (for LFU, MFU) (see [issue](https://github.com/folkvir/cache-replacement/issues/1))
-
-For a test case with 100 000 000 distincts elements using our Priority cache (0(1) access)
-
-use: `node --max_old_space_size=4096 tests/utils/heavy-priority-cache.js`
-
-Tested on a **16gb memory machine with an Intel® Core™ i7-4790S CPU @ 3.20GHz × 8, 64bits ubuntu 14.04**
-
-Results for `--max_old_space_size=4096`:
-
-Size | Time (ms) | Memory Usage (MB)
---- | --- | ---
-10 000 | 17 | 26.82
-100 000 | 147 | 82.72
-1 000 000 | 1064 | 355.17
-10 000 000 | 38022 | 3141.2
-100 000 000 | Heap out of memory | Heap out of memory
-
-Results without `--max_old_space_size=4096`, i.e. standard:
-
-Size | Time (ms) | Memory Usage (MB)
---- | --- | ---
-10 000 | 17 | 26.82
-100 000 | 157 | 83.68
-1 000 000 | 1266 | 341.17
-10 000 000 | Heap out of memory | Heap out of memory
-100 000 000 | Heap out of memory | Heap out of memory
